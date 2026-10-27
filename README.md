@@ -1,5 +1,15 @@
 # val-d-aubrelle-frontend
 
+## Technologies
+
+| Technologie    | Rôle                              |
+|----------------|-----------------------------------|
+| Next.js        | Framework (React)                 |
+| TypeScript     | Typage                            |
+| Tailwind CSS   | Styles                            |
+| shadcn/ui      | Composants (basés sur Radix UI)   |
+| Lucide         | Icônes                            |
+
 ## Stratégie de gestion des branches
 
 ### Branches permanentes
