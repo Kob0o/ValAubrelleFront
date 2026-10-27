@@ -37,4 +37,5 @@ feature/xxx        ●───●
    git switch -c feature/<feature>
    ```
 2. Une fois le travail prêt, ouvrir une pull request vers `develop` → déploiement sur l'environnement de **dev**.
+   Tout merge vers `develop` passe obligatoirement par une pull request : pas de push ni de merge direct sur `develop`.
 3. Merger `develop` dans `main` pour promouvoir sur l'environnement de **test**.
