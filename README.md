@@ -61,6 +61,10 @@ feature/xxx        ●───●
    git pull
    git switch -c feature/<feature>
    ```
-2. Une fois le travail prêt, ouvrir une pull request vers `develop` → déploiement sur l'environnement de **dev**.
-   Tout merge vers `develop` passe obligatoirement par une pull request : pas de push ni de merge direct sur `develop`.
-3. Merger `develop` dans `main` pour promouvoir sur l'environnement de **test**.
+2. Ouvrir la pull request **vers `develop`**, jamais vers `main`.
+   `develop` est la branche par défaut du dépôt : le bouton « Compare & pull request » la propose comme cible.
+   La CI (lint, tests, build) doit être verte avant la revue et le merge.
+   Tout merge vers `develop` passe par une pull request : pas de push direct.
+3. La mise en production vers l'environnement de **test** est un choix séparé.
+   Quand on la décide, ouvrir une pull request `develop` → `main`.
+   On ne merge pas une branche de travail directement dans `main`.
