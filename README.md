@@ -10,6 +10,13 @@
 | shadcn/ui      | Composants (basés sur Radix UI)   |
 | Lucide         | Icônes                            |
 
+## Pages de démonstration
+
+`/dev/forms` présente tous les états des champs de formulaire (`TextField`, `Select`).
+Les pages `/dev/*` sont visibles en développement et renvoient une 404 en production.
+Pour les afficher sur l'environnement intégré, construire avec `ENABLE_DEV_PAGES=true`
+(la variable est lue au build, les pages étant statiques).
+
 ## Stratégie de gestion des branches
 
 ### Branches permanentes
