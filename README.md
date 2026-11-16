@@ -16,6 +16,20 @@
 Les pages `/dev/*` sont visibles en développement et renvoient une 404 en production.
 Pour les afficher sur l'environnement intégré, construire avec `ENABLE_DEV_PAGES=true`
 (la variable est lue au build, les pages étant statiques).
+## Contrat d'API et types
+
+Le contrat OpenAPI v1.0.0 se place localement dans `doc/api/openapi.yaml` (fichier listé dans `.gitignore`, non poussé).
+
+Les types générés versionnés sont dans `src/types/api.d.ts`. Les réexports métier et les rôles sont dans `src/types/domain.ts` et `src/types/roles.ts`. Les fixtures typées sont dans `src/mocks/`.
+
+Après une mise à jour locale du contrat :
+
+```bash
+npm run generate:api
+npm run typecheck
+```
+
+Point ouvert contrat : le mapping `admin` → `AuthorRole` utilise `ops` dans `toAuthorRole` (à confirmer avec le back).
 
 ## Stratégie de gestion des branches
 
@@ -53,6 +67,10 @@ feature/xxx        ●───●
    git pull
    git switch -c feature/<feature>
    ```
-2. Une fois le travail prêt, ouvrir une pull request vers `develop` → déploiement sur l'environnement de **dev**.
-   Tout merge vers `develop` passe obligatoirement par une pull request : pas de push ni de merge direct sur `develop`.
-3. Merger `develop` dans `main` pour promouvoir sur l'environnement de **test**.
+2. Ouvrir la pull request **vers `develop`**, jamais vers `main`.
+   `develop` est la branche par défaut du dépôt : le bouton « Compare & pull request » la propose comme cible.
+   La CI (lint, tests, build) doit être verte avant la revue et le merge.
+   Tout merge vers `develop` passe par une pull request : pas de push direct.
+3. La mise en production vers l'environnement de **test** est un choix séparé.
+   Quand on la décide, ouvrir une pull request `develop` → `main`.
+   On ne merge pas une branche de travail directement dans `main`.
