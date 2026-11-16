@@ -10,6 +10,21 @@
 | shadcn/ui      | Composants (basés sur Radix UI)   |
 | Lucide         | Icônes                            |
 
+## Contrat d'API et types
+
+Le contrat OpenAPI v1.0.0 se place localement dans `doc/api/openapi.yaml` (fichier listé dans `.gitignore`, non poussé).
+
+Les types générés versionnés sont dans `src/types/api.d.ts`. Les réexports métier et les rôles sont dans `src/types/domain.ts` et `src/types/roles.ts`. Les fixtures typées sont dans `src/mocks/`.
+
+Après une mise à jour locale du contrat :
+
+```bash
+npm run generate:api
+npm run typecheck
+```
+
+Point ouvert contrat : le mapping `admin` → `AuthorRole` utilise `ops` dans `toAuthorRole` (à confirmer avec le back).
+
 ## Stratégie de gestion des branches
 
 ### Branches permanentes
