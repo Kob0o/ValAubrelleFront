@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { Toaster } from "@/components/ui/sonner";
+import { FeedbackToaster } from "@/components/shared/toast";
 
 export function UISetup({ children }: { children: ReactNode }) {
   return (
@@ -9,7 +9,7 @@ export function UISetup({ children }: { children: ReactNode }) {
         Aller au contenu
       </a>
       {children}
-      <Toaster theme="light" position="top-right" />
+      <FeedbackToaster />
     </>
   );
 }
