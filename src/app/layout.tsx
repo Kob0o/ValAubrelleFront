@@ -7,9 +7,9 @@ import { getActiveTheme } from "@/theme/themes";
 
 import "./globals.css";
 
+// Police variable : toutes les graisses, dont 666 pour les badges (contrat §4).
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "600", "800"],
   variable: "--font-inter",
   display: "swap",
 });

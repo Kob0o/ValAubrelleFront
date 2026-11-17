@@ -4,11 +4,12 @@ import { cn } from "cn"
 import { Slot } from "radix-ui"
 
 /**
- * Adapté à la charte (contrat UI/UX §4) : texte 16 px SemiBold (Inter 600),
- * rayon 4 px, pas de `transition-all`.
+ * Règle des badges (contrat UI/UX §4) : 10 px, graisse 666, majuscules par CSS
+ * (le texte source reste en casse de phrase), rayon 4 px, pas de `transition-all`.
+ * Un badge accompagne une information, il ne la porte jamais seul.
  */
 const badgeVariants = cva(
-  "group/badge inline-flex min-h-6 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-sm border border-transparent px-2 text-base leading-6 font-semibold whitespace-nowrap transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-4!",
+  "group/badge inline-flex min-h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-sm border border-transparent px-2 text-[10px] leading-4 font-[666] uppercase whitespace-nowrap transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-4!",
   {
     variants: {
       variant: {

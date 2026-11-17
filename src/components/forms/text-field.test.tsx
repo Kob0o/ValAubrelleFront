@@ -32,13 +32,13 @@ describe("TextField", () => {
     expect(screen.getByText("Nom")).toBeVisible();
   });
 
-  it("signale un champ obligatoire par un badge texte inclus dans le libellé", () => {
+  it("signale un champ obligatoire par un badge visuel et l'attribut required", () => {
     render(<ControlledField required />);
 
-    const input = screen.getByRole("textbox", { name: "Nom Obligatoire" });
+    const input = screen.getByRole("textbox", { name: "Nom" });
     expect(input).toBeRequired();
     expect(input).toHaveAttribute("aria-required", "true");
-    expect(screen.getByText("Obligatoire")).toBeVisible();
+    expect(screen.getByText("Obligatoire")).toHaveAttribute("aria-hidden", "true");
     expect(screen.queryByText("*")).not.toBeInTheDocument();
   });
 
@@ -55,7 +55,7 @@ describe("TextField", () => {
     );
     await user.unhover(help);
 
-    await user.tab();
+    // L'icône est à côté du libellé : elle précède le champ au clavier.
     await user.tab();
     expect(help).toHaveFocus();
     expect(await screen.findByRole("tooltip")).toBeInTheDocument();

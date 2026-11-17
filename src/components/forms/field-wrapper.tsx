@@ -33,7 +33,7 @@ export type FieldWrapperProps = {
   id?: string;
   /**
    * Consigne du champ, affichée dans une infobulle (icône d'information à
-   * droite du champ) et annoncée avec le champ par les lecteurs d'écran.
+   * côté du libellé) et annoncée avec le champ par les lecteurs d'écran.
    * Règle : la consigne va ici ; le placeholder ne porte qu'un exemple de valeur.
    */
   hint?: string;
@@ -41,7 +41,7 @@ export type FieldWrapperProps = {
   required?: boolean;
   /** Texte affiché sous le champ et lu avec lui (compteur de caractères…). */
   footer?: string;
-  /** Bouton placé dans le champ, avant l'aide (afficher le mot de passe…). */
+  /** Bouton placé à droite dans le champ (afficher le mot de passe…). */
   trailing?: ReactNode;
   className?: string;
   children: (control: FieldControlProps, layout: FieldLayout) => ReactNode;
@@ -53,9 +53,6 @@ export type FieldWrapperProps = {
  */
 export const fieldIconButtonClassName =
   "flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:cursor-not-allowed disabled:hover:text-muted-foreground [&_svg]:size-4";
-
-/** Marges droites littérales (Tailwind ne détecte pas les classes construites). */
-const TRAILING_PADDING = ["", "pr-12", "pr-23"] as const;
 
 /**
  * Libellé + aide + erreur partagés par TextField, Select et les futurs champs
@@ -85,14 +82,20 @@ export function FieldWrapper({
       .filter(Boolean)
       .join(" ") || undefined;
 
-  const trailingCount = (trailing ? 1 : 0) + (hint ? 1 : 0);
-
   return (
     <div className={cn("flex flex-col gap-2", className)} data-slot="field">
-      <Label htmlFor={controlId} className="flex-wrap gap-2">
-        {label}
-        {required ? <Badge variant="secondary">Obligatoire</Badge> : null}
-      </Label>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Label htmlFor={controlId}>{label}</Label>
+          {hint ? <FieldHint label={label} hint={hint} /> : null}
+        </div>
+        {/* Indication visuelle ; l'attribut `required` l'annonce déjà au lecteur d'écran. */}
+        {required ? (
+          <Badge variant="secondary" aria-hidden="true">
+            Obligatoire
+          </Badge>
+        ) : null}
+      </div>
 
       {/* Texte de l'aide pour les lecteurs d'écran, lu avec le champ. */}
       {hint ? (
@@ -109,12 +112,11 @@ export function FieldWrapper({
             "aria-invalid": error ? true : undefined,
             "aria-required": required ? true : undefined,
           },
-          { trailingPaddingClassName: TRAILING_PADDING[trailingCount] || undefined },
+          { trailingPaddingClassName: trailing ? "pr-12" : undefined },
         )}
-        {trailingCount > 0 ? (
+        {trailing ? (
           <div className="absolute inset-y-0 right-0 flex items-center">
             {trailing}
-            {hint ? <FieldHint label={label} hint={hint} /> : null}
           </div>
         ) : null}
       </div>
@@ -142,7 +144,9 @@ export function FieldWrapper({
 }
 
 /**
- * Icône d'information : l'aide s'affiche au survol, au focus clavier et au
+ * Icône d'information à côté du libellé, hors du `<label>` pour ne pas entrer
+ * dans le nom du champ. Icône 16 px dans une case de 24 px, zone cliquable
+ * étendue à 44 × 44 px. L'aide s'affiche au survol, au focus clavier et au
  * toucher (clic), se ferme avec Échap ou en cliquant ailleurs.
  */
 function FieldHint({ label, hint }: { label: string; hint: string }) {
@@ -160,12 +164,12 @@ function FieldHint({ label, hint }: { label: string; hint: string }) {
               event.preventDefault();
               setOpen(true);
             }}
-            className={fieldIconButtonClassName}
+            className="relative flex size-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors outline-none after:absolute after:-inset-2.5 hover:text-foreground focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Info aria-hidden="true" />
+            <Info aria-hidden="true" className="size-4" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top" align="end" sideOffset={4}>
+        <TooltipContent side="top" align="start" sideOffset={4}>
           {hint}
         </TooltipContent>
       </Tooltip>
