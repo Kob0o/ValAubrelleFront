@@ -100,10 +100,10 @@ export const SECTION_STATUSES = [
 export const statusLabels = {
   quality: {
     available: "Disponible",
-    missing: "Absente",
-    insufficient_sample: "Petit effectif",
-    suppressed: "Masquée",
-    source_error: "Source en erreur",
+    missing: "Donnée absente",
+    insufficient_sample: "Échantillon insuffisant",
+    suppressed: "Non diffusable",
+    source_error: "Erreur de source",
     not_computable: "Non calculable",
   } satisfies Record<QualityStatus, string>,
   request: {
