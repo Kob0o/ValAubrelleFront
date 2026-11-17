@@ -703,8 +703,31 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Start asynchronous generation of a sourced report draft */
+        /**
+         * Generate a sourced report draft with AI (outside MVP)
+         * @description This asynchronous AI generation flow is outside the MVP. Use POST /reports/drafts/manual to create an empty draft for manual authoring.
+         */
         post: operations["createReportDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/drafts/manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an empty report draft for manual authoring
+         * @description Creates a draft without starting an AI-generation job.
+         */
+        post: operations["createEmptyReportDraft"];
         delete?: never;
         options?: never;
         head?: never;
@@ -722,6 +745,23 @@ export interface paths {
         get: operations["getReportDraft"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/drafts/{reportId}/sections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a manually authored section to a report draft */
+        post: operations["createManualReportSection"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2153,7 +2193,7 @@ export interface components {
             order?: number;
             title?: string;
             /** @enum {string} */
-            type?: "generated" | "opah_review" | "land";
+            type?: "generated" | "opah_review" | "land" | "manual";
             text?: string;
             content?: string;
             figures?: {
@@ -2412,6 +2452,8 @@ export interface components {
             /** Format: uuid */
             id?: string;
             title?: string;
+            scope?: components["schemas"]["Scope"];
+            period?: components["schemas"]["Period"];
             sections?: components["schemas"]["ReportSection"][];
         };
         SectionDecisionInput: {
@@ -4674,6 +4716,40 @@ export interface operations {
             503: components["responses"]["ServiceUnavailable"];
         };
     };
+    createEmptyReportDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description UUID v4; same key and payload replays the original response. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title: string;
+                    scope: components["schemas"]["Scope"];
+                    period: components["schemas"]["Period"];
+                };
+            };
+        };
+        responses: {
+            /** @description Empty report draft created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportDraft"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
     getReportDraft: {
         parameters: {
             query?: never;
@@ -4696,6 +4772,45 @@ export interface operations {
             };
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    createManualReportSection: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description UUID v4; same key and payload replays the original response. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title: string;
+                    text: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Manually authored report section created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        sectionId: string;
+                    };
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
     reviewReportSection: {
