@@ -7,3 +7,17 @@ import { afterEach } from "vitest";
 afterEach(() => {
   cleanup();
 });
+
+// jsdom n'implémente pas ces API utilisées par Radix (Select, Popover) et cmdk.
+if (typeof window !== "undefined") {
+  const proto = window.HTMLElement.prototype;
+  proto.hasPointerCapture ??= () => false;
+  proto.setPointerCapture ??= () => {};
+  proto.releasePointerCapture ??= () => {};
+  proto.scrollIntoView ??= () => {};
+  window.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}

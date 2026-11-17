@@ -23,6 +23,13 @@ Règles à appliquer sur toutes les machines :
 
 En cas de contradiction entre une maquette, une primitive et la charte, suivre l'ordre de priorité du contrat et signaler la décision dans la PR. Le contrat est la référence commune à pointer aux agents IA ; il ne dépend d'aucune installation externe d'Unslop.
 
+## Pages de démonstration
+
+`/dev/forms` présente tous les états des champs de formulaire (`TextField`, `Select`).
+Les pages `/dev/*` sont visibles en développement et renvoient une 404 en production.
+Pour les afficher sur l'environnement intégré, construire avec `ENABLE_DEV_PAGES=true`
+(la variable est lue au build, les pages étant statiques).
+
 ## Contrat d'API et types
 
 Le contrat OpenAPI v1.0.0 se place localement dans `doc/api/openapi.yaml` (fichier listé dans `.gitignore`, non poussé).
