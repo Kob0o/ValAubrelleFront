@@ -18,6 +18,7 @@ Ce skill est l'entrée des agents IA pour tout travail sur l'interface. Le [cont
 
 - Appliquer les règles du contrat, y compris les exceptions explicites pour la carte, les données et les couleurs d'état.
 - Modifier un style commun dans les tokens, le thème ou la primitive partagée, puis vérifier ses usages. Éviter les corrections de couleur répétées dans chaque écran.
+- Champs : composer `FieldWrapper` ; aide dans l'infobulle à côté du libellé, badge « Obligatoire » à droite, jamais d'astérisque ni de texte d'aide sous le champ. Badges : primitive `Badge` telle quelle (10 px, graisse 666, majuscules). Détails dans le contrat §4 et §5.
 - Vérifier les états pertinents, le focus, les contrastes et les versions mobile et bureau. Exécuter les contrôles du dépôt indiqués dans le contrat.
 - Si une maquette contredit la charte ou le contrat, signaler l'écart dans la PR et proposer une décision commune ; ne pas créer une variante locale silencieuse.
 
