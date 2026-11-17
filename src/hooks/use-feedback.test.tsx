@@ -20,9 +20,13 @@ function setup() {
   return renderHook(() => useFeedback()).result.current;
 }
 
-afterEach(() => {
-  act(() => {
+// Fermer les toasts puis laisser finir l'animation de sortie de Sonner
+// (minuterie de 200 ms non annulée au démontage) avant de démonter : sinon
+// elle déclenche un rendu React après la fin de l'environnement de test.
+afterEach(async () => {
+  await act(async () => {
     toast.dismiss();
+    await new Promise((resolve) => setTimeout(resolve, 300));
   });
   cleanup();
 });
@@ -136,5 +140,32 @@ describe("useFeedback", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("Toaster : boutons accessibles (charte, RGAA)", () => {
+  const TARGET_44 = ["h-11!", "min-h-11!"];
+
+  it("le bouton de fermeture fait 44 px et reste dans le toast", async () => {
+    const feedback = setup();
+    act(() => {
+      feedback.error(buildApiError({ httpStatus: 0 }));
+    });
+
+    const close = await screen.findByRole("button", { name: "Fermer la notification" });
+    expect(close).toHaveClass("size-11!", "right-1!", "left-auto!", "transform-none!");
+    expect(close.closest("li")).toHaveClass("has-[[data-close-button]]:pr-14!");
+  });
+
+  it("le bouton d'action fait 44 px, texte 16 px SemiBold", async () => {
+    const feedback = setup();
+    act(() => {
+      feedback.success("Demande envoyée.", {
+        action: { label: "Voir la demande", onClick: () => {} },
+      });
+    });
+
+    const action = await screen.findByRole("button", { name: "Voir la demande" });
+    expect(action).toHaveClass(...TARGET_44, "text-base!", "font-semibold!");
   });
 });

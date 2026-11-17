@@ -20,6 +20,8 @@ export const FRONT_ERROR_CODES = {
   unsupportedMediaType: "UNSUPPORTED_MEDIA_TYPE",
   tooManyRequests: "TOO_MANY_REQUESTS",
   serviceUnavailable: "SERVICE_UNAVAILABLE",
+  /** 4xx non listé, sans code serveur : pas d'entrée dans `errorMessages`, message selon le statut. */
+  requestFailed: "REQUEST_FAILED",
 } as const;
 
 const GENERIC_ERROR = "Une erreur est survenue. Réessayez dans quelques instants.";
@@ -100,7 +102,9 @@ function codeForStatus(httpStatus: number): string {
     case 503:
       return FRONT_ERROR_CODES.serviceUnavailable;
     default:
-      return "INTERNAL_ERROR";
+      return httpStatus >= 500
+        ? "INTERNAL_ERROR"
+        : FRONT_ERROR_CODES.requestFailed;
   }
 }
 

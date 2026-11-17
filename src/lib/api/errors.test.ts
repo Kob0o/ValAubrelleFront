@@ -161,6 +161,25 @@ describe("ErrorNormalizer : règles transverses", () => {
     expect(server.message).toBe(errorMessages.INTERNAL_ERROR);
   });
 
+  it.each([400, 405])(
+    "un %i sans corps donne REQUEST_FAILED et le message 4xx",
+    async (status) => {
+      const error = await normalizeResponse(new Response(null, { status }));
+      expect(error.code).toBe("REQUEST_FAILED");
+      expect(errorMessages.REQUEST_FAILED).toBeUndefined();
+      expect(error.message).toBe(
+        "La demande n'a pas pu aboutir. Vérifiez les informations saisies.",
+      );
+      expect(isServerError(error)).toBe(false);
+    },
+  );
+
+  it("un 5xx non listé sans corps donne INTERNAL_ERROR", () => {
+    const error = buildApiError({ httpStatus: 504 });
+    expect(error.code).toBe("INTERNAL_ERROR");
+    expect(error.message).toBe(errorMessages.INTERNAL_ERROR);
+  });
+
   it("chaque code métier des inventaires a un message", () => {
     for (const code of [
       "ALREADY_ASSIGNED",
