@@ -10,12 +10,26 @@
 | shadcn/ui      | Composants (basés sur Radix UI)   |
 | Lucide         | Icônes                            |
 
+## Contrat UI/UX commun aux composants
+
+**Avant de créer ou modifier un composant ou un écran**, chaque développeur et son agent IA doivent lire le [skill UI/UX du projet](.agents/skills/val-aubrelle-ui-ux/SKILL.md) et son [contrat détaillé](.agents/skills/val-aubrelle-ui-ux/references/contrat-ui-ux.md). La [charte graphique 2026](docs/Val-d-Aubrelle_Charte-graphique.pdf) est incluse dans le dépôt.
+
+Règles à appliquer sur toutes les machines :
+
+- Réutiliser les primitives shadcn/ui configurées dans `components.json` et les icônes Lucide ; créer un composant métier uniquement pour une règle ou un assemblage partagé.
+- Appliquer les couleurs, la typographie Inter et les contrastes de la charte via `src/theme/tokens.ts`, `src/theme/themes.ts` et `src/app/globals.css`. Ne pas définir de variantes de marque propres à un écran.
+- Prévoir les états, le clavier, le lecteur d'écran et le rendu mobile à 390 px décrits dans le contrat. Une donnée absente, non diffusable ou en erreur garde un rendu distinct.
+- Utiliser les principes de retenue visuelle adaptés d'[Unslop](https://github.com/heydamir/unslop), sans remplacer la charte ni modifier les fonctionnalités du MVP.
+
+En cas de contradiction entre une maquette, une primitive et la charte, suivre l'ordre de priorité du contrat et signaler la décision dans la PR. Le contrat est la référence commune à pointer aux agents IA ; il ne dépend d'aucune installation externe d'Unslop.
+
 ## Pages de démonstration
 
 `/dev/forms` présente tous les états des champs de formulaire (`TextField`, `Select`).
 Les pages `/dev/*` sont visibles en développement et renvoient une 404 en production.
 Pour les afficher sur l'environnement intégré, construire avec `ENABLE_DEV_PAGES=true`
 (la variable est lue au build, les pages étant statiques).
+
 ## Contrat d'API et types
 
 Le contrat OpenAPI v1.0.0 se place localement dans `doc/api/openapi.yaml` (fichier listé dans `.gitignore`, non poussé).
