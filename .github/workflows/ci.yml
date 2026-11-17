@@ -21,8 +21,9 @@ env:
   OVERLAY: apps/aubrelle/overlays/dev/kustomization.yaml
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
+  verify:
+    name: verify
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - uses: actions/checkout@v4
 
