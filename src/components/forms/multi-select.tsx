@@ -271,7 +271,7 @@ function MultiSelectControl({
   }
 
   const chipClassName =
-    "h-6 min-h-6 normal-case tracking-normal gap-0.5 py-0 pl-2 pr-0.5";
+    "h-6 min-h-6 normal-case tracking-normal gap-2 py-0 pl-2 pr-0.5";
 
   return (
     <div className="flex flex-col gap-2">
