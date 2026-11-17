@@ -1,73 +1,51 @@
-.wrapper {
-  position: relative;
-  min-width: 0;
-  height: 100%;
-  min-height: 620px;
-  isolation: isolate;
-  background-color: var(--color-surface-alt);
-  background-image: radial-gradient(ellipse at 50% 45%, var(--color-surface) 0%, transparent 68%);
-  box-shadow: inset 0 1px 12px rgb(31 92 66 / 0.035);
-}
-.wrapper .canvas { height: 100%; min-height: 620px; background: transparent; font-family: inherit; font-size: 16px; z-index: 0; }
-.canvas svg { filter: none; }
-.canvas path[role="button"] { transition: fill 160ms, stroke-width 160ms, filter 160ms; stroke-linejoin: miter; stroke-miterlimit: 3; }
-.canvas .hovered { stroke: var(--color-text); stroke-width: 3; filter: brightness(1.04); }
+.wrapper { position: relative; display: flex; flex-direction: column; min-width: 0; height: 100%; isolation: isolate; background: var(--color-surface-alt); }
+.wrapper .canvas { flex: 1; height: 620px; min-height: 620px; background: transparent; font-family: inherit; font-size: 16px; z-index: 0; }
+.canvas path[role="button"] { transition: fill 160ms, stroke-width 160ms; stroke-linejoin: miter; stroke-miterlimit: 3; }
+.canvas .hovered { stroke: var(--color-text); stroke-width: 3; }
 .canvas .focused { stroke: var(--color-primary-strong); stroke-width: 5; outline: none; stroke-dasharray: 6 3; }
-.canvas path[aria-pressed="true"] { filter: none; }
-.mapBadge { position: absolute; top: 22px; left: 22px; display: flex; align-items: center; gap: 12px; padding: 12px 16px 12px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-text); box-shadow: 0 3px 14px rgb(31 92 66 / 0.06); pointer-events: none; }
-.badgeIcon { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--color-border); border-radius: 9px; color: var(--color-primary-strong); background: var(--color-surface-alt); }
+.mapBadge { position: absolute; top: var(--space-6); left: var(--space-6); display: flex; align-items: center; gap: var(--space-3); max-width: calc(100% - 112px); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); color: var(--color-text); pointer-events: none; }
+.badgeIcon { display: grid; flex-shrink: 0; place-items: center; width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--color-surface-alt); color: var(--color-primary-strong); }
 .mapBadge strong { display: block; font-size: 16px; font-weight: 600; }
-.mapBadge small { display: block; font-size: 16px; color: var(--color-text-muted); margin-top: 3px; }
+.mapBadge small { display: block; margin-top: var(--space-1); color: var(--color-text-muted); font-size: 16px; }
 .mapBadge > span:last-child { min-width: 0; }
-.controls { position: absolute; right: 22px; top: 22px; display: flex; flex-direction: column; padding: 4px; gap: 2px; border: 1px solid var(--color-text-muted); border-radius: 12px; background: var(--color-surface); box-shadow: 0 3px 14px rgb(31 92 66 / 0.07); }
-.controls button { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 7px; background: var(--color-surface); color: var(--color-primary-strong); cursor: pointer; transition: background 160ms; }
-.controls button:last-child { border-top: 1px solid var(--color-border); border-top-left-radius: 0; border-top-right-radius: 0; }
-.controls button:hover { background: var(--color-surface-alt); }
+.controls { position: absolute; top: var(--space-6); right: var(--space-6); display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-1); border: 1px solid var(--color-text-muted); border-radius: var(--radius); background: var(--color-surface); }
+.controls button { color: var(--color-primary-strong); }
 .controls button:focus-visible { outline: 3px solid var(--color-primary-strong); outline-offset: -3px; }
-.compass { position: absolute; right: 36px; top: 194px; display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--color-primary-strong); font-size: 16px; font-weight: 800; pointer-events: none; }
-.compass svg { filter: drop-shadow(0 2px 2px rgb(31 92 66 / 0.1)); }
-.mapHint { position: absolute; left: 24px; top: 132px; display: flex; align-items: center; gap: 7px; color: var(--color-text-muted); font-size: 16px; pointer-events: none; }
-.legendPosition { position: absolute; bottom: 36px; left: 22px; right: 22px; }
-.legend { background: var(--color-surface); padding: 18px 20px; border: 1px solid var(--color-border); border-radius: 12px; box-shadow: 0 5px 20px rgb(31 92 66 / 0.07); }
-.legend h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--color-primary-strong); font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.compass { position: absolute; top: 200px; right: 40px; display: flex; flex-direction: column; align-items: center; gap: var(--space-1); color: var(--color-primary-strong); font-size: 16px; font-weight: 600; pointer-events: none; }
+.mapHint { position: absolute; top: 128px; left: var(--space-6); display: flex; align-items: center; gap: var(--space-2); color: var(--color-text-muted); font-size: 16px; pointer-events: none; }
+.legendPosition { padding: var(--space-6); border-top: 1px solid var(--color-border); background: var(--color-surface); }
+.legend { color: var(--color-text); }
+.legend h3 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); color: var(--color-primary-strong); font-size: 16px; font-weight: 600; }
 .legend h3 > svg { flex-shrink: 0; }
-.legend h3 > span { margin-left: auto; font-size: 16px; font-weight: 400; color: var(--color-text-muted); }
-.legend ul { display: flex; flex-wrap: wrap; gap: 12px 20px; }
-.legend li { display: flex; gap: 8px; align-items: center; font-size: 16px; }
-.swatch { display: inline-block; flex-shrink: 0; width: 20px; height: 20px; border: 1px solid var(--color-text-muted); border-radius: 4px; }
+.legend h3 > span { margin-left: auto; color: var(--color-text-muted); font-size: 16px; font-weight: 400; }
+.legend ul { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-6); }
+.legend li { display: flex; align-items: center; gap: var(--space-2); font-size: 16px; }
+.swatch { display: inline-block; flex-shrink: 0; width: 20px; height: 20px; border: 1px solid var(--color-text-muted); border-radius: var(--radius-sm); }
 .hatched { background: repeating-linear-gradient(135deg, var(--color-surface-alt) 0 4px, var(--color-text-muted) 4px 5.5px, var(--color-surface-alt) 5.5px 8px); }
-.canvas .tooltip { color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 9px; box-shadow: 0 5px 18px rgb(31 92 66 / 0.12); padding: 10px 14px; font-family: inherit; max-width: 230px; white-space: normal; }
+.canvas .tooltip { max-width: 240px; padding: var(--space-3) var(--space-4); border: 1px solid var(--color-text-muted); border-radius: var(--radius); background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-sm); font-family: inherit; white-space: normal; }
 .tooltip strong { display: block; font-size: 16px; font-weight: 600; }
-.tooltip span { display: block; font-size: 16px; color: var(--color-text-muted); margin-top: 3px; }
-.selectionLabel { display: flex; align-items: center; justify-content: center; background: transparent; border: 0; pointer-events: none; }
-.selectedCard { position: relative; width: max-content; max-width: 200px; padding: 8px 14px; border: 1.5px solid var(--color-primary-strong); border-radius: 4px; background: var(--color-surface); box-shadow: 0 1px 4px rgb(31 92 66 / 0.07); text-align: center; font-family: var(--font-inter), sans-serif; }
-.selectedCard span { display: block; font-size: 16px; line-height: 1.4; color: var(--color-text-muted); }
-.selectedCard strong { display: block; margin-top: 3px; font-size: 16px; line-height: 1.3; font-weight: 600; color: var(--color-primary-strong); }
-.state { min-height: 420px; width: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; padding: 24px; text-align: center; background: var(--color-surface-alt); }
+.tooltip span { display: block; margin-top: var(--space-1); color: var(--color-text-muted); font-size: 16px; }
+.selectionLabel { display: flex; align-items: center; justify-content: center; border: 0; background: transparent; pointer-events: none; }
+.selectedCard { position: relative; width: max-content; max-width: 200px; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-primary-strong); border-radius: var(--radius-sm); background: var(--color-surface); box-shadow: var(--shadow-sm); text-align: center; font-family: var(--font-inter), sans-serif; }
+.selectedCard span { display: block; color: var(--color-text-muted); font-size: 16px; line-height: 1.5; }
+.selectedCard strong { display: block; margin-top: var(--space-1); color: var(--color-primary-strong); font-size: 16px; line-height: 1.5; font-weight: 600; font-variant-numeric: tabular-nums; }
+.state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4); width: 100%; min-height: 420px; padding: var(--space-6); background: var(--color-surface-alt); color: var(--color-text); text-align: center; font-size: 16px; }
 .state h2 { font-size: 20px; font-weight: 600; }
-.state button { padding: 10px 20px; min-height: 44px; border-radius: 6px; background: var(--color-primary); color: var(--color-on-primary); font-weight: 600; cursor: pointer; }
-.state button:hover { background: var(--color-primary-strong); }
-.state button:focus-visible { outline: 3px solid var(--color-primary-strong); outline-offset: 3px; }
-.errorOverlay { position: absolute; inset: 0; background: var(--color-surface-alt); z-index: 2; display: flex; align-items: center; }
-.wrapper .canvas [class~="leaflet-control-attribution"] { padding: 4px 8px; background: var(--color-surface); color: var(--color-text-muted); font-family: inherit; font-size: 16px; line-height: 1.5; }
+.state > svg { color: var(--color-text-muted); }
+.state p { max-width: 44ch; overflow-wrap: anywhere; font-size: 16px; }
+.emptyMap { position: absolute; inset: 0; z-index: 1; }
+.errorOverlay { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; background: var(--color-surface-alt); }
+.wrapper .canvas [class~="leaflet-control-attribution"] { padding: var(--space-1) var(--space-2); background: var(--color-surface); color: var(--color-text-muted); font-family: inherit; font-size: 16px; line-height: 1.5; }
 .wrapper .canvas [class~="leaflet-control-attribution"] a { display: inline-flex; align-items: center; min-height: 44px; color: var(--color-primary); }
 @media (max-width: 600px) {
-  .wrapper { height: auto; min-height: 600px; }
-  .wrapper .canvas { height: 600px; min-height: 600px; }
-  .mapBadge { left: 12px; top: 12px; padding: 9px 12px 9px 9px; gap: 9px; max-width: calc(100% - 86px); }
-  .badgeIcon { width: 30px; height: 30px; }
-  .mapBadge strong { font-size: 16px; }
-  .mapBadge small { font-size: 16px; }
-  .controls { top: 12px; right: 12px; }
-  .compass { top: 176px; right: 26px; }
+  .wrapper .canvas { height: 560px; min-height: 560px; }
+  .mapBadge { top: var(--space-3); left: var(--space-3); gap: var(--space-2); max-width: calc(100% - 88px); padding: var(--space-2); }
+  .controls { top: var(--space-3); right: var(--space-3); }
+  .compass { top: 184px; right: 28px; }
   .mapHint { display: none; }
-  .legendPosition { position: relative; left: auto; right: auto; bottom: auto; padding: 12px; }
-  .legend { padding: 14px; }
-  .legend h3 { font-size: 16px; margin-bottom: 12px; }
-  .legend h3 > span { display: none; }
-  .legend ul { gap: 10px 14px; }
-  .legend li { font-size: 16px; }
-  .selectedCard { padding: 8px 10px; max-width: 200px; }
-  .selectedCard strong { font-size: 16px; }
+  .legendPosition { padding: var(--space-4); }
+  .legend h3 { margin-bottom: var(--space-3); }
+  .legend h3 > span { flex-basis: 100%; margin-left: var(--space-6); }
+  .legend ul { gap: var(--space-3) var(--space-4); }
 }
-@media (prefers-reduced-motion: reduce) { .canvas path[role="button"], .controls button { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .canvas path[role="button"] { transition: none; } }

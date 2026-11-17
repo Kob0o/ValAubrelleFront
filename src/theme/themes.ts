@@ -57,6 +57,8 @@ function valAubrelleTheme(): Theme {
       "--accent-foreground": charter.text,
       "--destructive": charter.danger,
       "--border": charter.border,
+      // Bordure des champs : `charter.border` (#D5E0D8) n'atteint pas 3:1 sur
+      // blanc (RGAA 3.3) ; le Gris ardoise de la charte, si.
       "--input": charter.textMuted,
       "--ring": charter.primaryStrong,
       "--chart-1": charter.dataSeq[0],

@@ -40,6 +40,8 @@ export type MapViewProps = {
   zoom: number;
   center: MapCenter;
   onViewChange?: (view: { zoom: number; center: MapCenter }) => void;
+  /** Ajuste la première vue aux géométries, comme l’action de recentrage. */
+  fitToTerritoryOnMount?: boolean;
   isLoading?: boolean;
   error?: MapError | null;
   onRetry?: () => void;

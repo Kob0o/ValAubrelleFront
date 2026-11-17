@@ -1,15 +1,24 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { TileLayer } from "leaflet";
+import type { Map as LeafletMap, TileLayer } from "leaflet";
 import { indicatorClasses, indicatorValues, municipalities, defaultCenter } from "@/mocks/explorer";
 import type { MapViewProps } from "./types";
+
+const resizeObservers = new Set<() => void>();
 
 // jsdom ne dessine pas de SVG et ne dispose pas de ResizeObserver.
 beforeAll(() => {
   Object.defineProperty(SVGSVGElement.prototype, "createSVGRect", { configurable: true, value: () => ({}) });
-  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
+  vi.stubGlobal("ResizeObserver", class {
+    onResize: () => void;
+    constructor(callback: ResizeObserverCallback) {
+      this.onResize = () => callback([], this as unknown as ResizeObserver);
+    }
+    observe() { resizeObservers.add(this.onResize); }
+    disconnect() { resizeObservers.delete(this.onResize); }
+  });
 });
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 async function renderMap(overrides: Partial<MapViewProps> = {}) {
   // Import après le polyfill : Leaflet détecte SVG à l’import.
@@ -19,6 +28,40 @@ async function renderMap(overrides: Partial<MapViewProps> = {}) {
 }
 
 describe("MapView avec le vrai moteur Leaflet SVG", () => {
+  it("cadre le territoire au chargement comme au recentrage et conserve ensuite le zoom choisi", async () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(800);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(620);
+    const L = await import("leaflet");
+    const setView = vi.spyOn(L.Map.prototype, "setView");
+    const onViewChange = vi.fn();
+    const { props, rerender, MapView } = await renderMap({ fitToTerritoryOnMount: true, onViewChange });
+    const map = setView.mock.contexts[0] as LeafletMap;
+    act(() => { resizeObservers.forEach((resize) => resize()); });
+    const initial = { zoom: map.getZoom(), center: map.getCenter() };
+    expect(onViewChange).toHaveBeenLastCalledWith({ zoom: initial.zoom, center: { lat: initial.center.lat, lng: initial.center.lng } });
+    fireEvent.click(screen.getByRole("button", { name: "Zoom avant" }));
+    const chosenZoom = map.getZoom();
+    expect(chosenZoom).toBeGreaterThan(initial.zoom);
+    rerender(<MapView {...props} layer="dpe" classes={indicatorClasses.dpe} />);
+    act(() => { resizeObservers.forEach((resize) => resize()); });
+    expect(map.getZoom()).toBe(chosenZoom);
+    fireEvent.click(screen.getByRole("button", { name: "Recentrer sur le territoire" }));
+    expect(map.getZoom()).toBe(initial.zoom);
+    expect(map.project(map.getCenter()).distanceTo(map.project(initial.center))).toBeLessThanOrEqual(1);
+  });
+
+  it("respecte le centre et le zoom fournis quand le cadrage automatique n’est pas demandé", async () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(800);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(620);
+    const L = await import("leaflet");
+    const setView = vi.spyOn(L.Map.prototype, "setView");
+    await renderMap({ zoom: 12, center: { lat: 50.7, lng: 3.15 } });
+    const map = setView.mock.contexts[0] as LeafletMap;
+    act(() => { resizeObservers.forEach((resize) => resize()); });
+    expect(map.getZoom()).toBe(12);
+    expect(map.project(map.getCenter()).distanceTo(map.project(L.latLng(50.7, 3.15)))).toBeLessThanOrEqual(1);
+  });
+
   it("dessine les 32 communes en prix puis DPE sans perdre les éléments focalisables", async () => {
     const { container, rerender, props, MapView } = await renderMap();
     const paths = container.querySelectorAll('path[role="button"]');
@@ -73,6 +116,25 @@ describe("MapView avec le vrai moteur Leaflet SVG", () => {
     fireEvent.click(screen.getByRole("button", { name: "Réessayer" }));
     expect(onRetry).toHaveBeenCalledOnce();
     expect(container.querySelector(".leaflet-container")).not.toBeInTheDocument();
+  });
+
+  it("présente un état vide explicite quand aucune géométrie ne peut être dessinée", async () => {
+    const { container } = await renderMap({ municipalities: [{ ...municipalities[0], geometry: null }] });
+    expect(screen.getByRole("status")).toHaveTextContent("Aucune commune à afficher sur la carte");
+    expect(screen.getByRole("status")).toHaveTextContent("consultables dans la liste");
+    expect(container.querySelector(".leaflet-container")).not.toBeInTheDocument();
+  });
+
+  it("normalise les messages et réserve la référence copiable aux erreurs serveur", async () => {
+    const error = { status: 503, message: "SQL password=secret", correlationId: "support-123" };
+    const { rerender, props, MapView } = await renderMap({ error });
+    expect(screen.getByRole("alert")).not.toHaveTextContent("SQL password=secret");
+    expect(screen.getByRole("alert")).toHaveTextContent("momentanément indisponible");
+    expect(screen.getByRole("button", { name: "Copier la référence" })).toBeInTheDocument();
+    rerender(<MapView {...props} error={{ ...error, status: 403 }} />);
+    expect(screen.getByRole("alert")).toHaveTextContent("pas accès");
+    expect(screen.queryByText("support-123")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Copier la référence" })).not.toBeInTheDocument();
   });
 
   it("remplace un fond de carte en panne par ApiErrorState et permet de réessayer", async () => {

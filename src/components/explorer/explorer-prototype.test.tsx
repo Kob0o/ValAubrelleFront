@@ -19,6 +19,20 @@ afterEach(cleanup);
 const snapshot = () => JSON.parse(screen.getByTestId("map-data").textContent!);
 
 describe("filtre annuel de l’explorateur", () => {
+  it("indique la source et permet de rétablir la liste après une recherche sans résultat", async () => {
+    render(<ExplorerPrototype />);
+    expect(screen.getByText(/Source : Démonstration locale/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("combobox", { name: "Année" })).toBeEnabled());
+    const search = screen.getByRole("searchbox", { name: "Rechercher une commune" });
+    fireEvent.change(search, { target: { value: "aucune-commune-xyz" } });
+    expect(screen.getByText("0 commune sur 32")).toBeInTheDocument();
+    expect(screen.getByText("Aucune commune ne correspond à votre recherche.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Effacer la recherche" }));
+    expect(search).toHaveValue("");
+    expect(screen.getByText("32 communes sur 32")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Bois-des-Aulnes/ })).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("actualise la carte et la fiche, conserve la sélection et transmet l’année sur la couche DPE", async () => {
     const source = vi.fn<ExplorerDataSource>(mockExplorerDataSource);
     render(<ExplorerPrototype dataSource={source} />);
