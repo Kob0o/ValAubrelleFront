@@ -13,6 +13,8 @@ import { IconButton } from "@/components/shared/icon-button";
 import { Link } from "@/components/shared/link";
 import { Button } from "@/components/ui/button";
 
+import { NavigationDemo } from "./navigation-demo";
+
 export default function DevUiPage() {
   if (process.env.NODE_ENV === "production") {
     notFound();
@@ -25,7 +27,7 @@ export default function DevUiPage() {
     >
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-extrabold text-[color:var(--color-primary-strong)]">
-          Catalogue UI — G1.A
+          Catalogue UI — G1
         </h1>
         <p className="text-base text-muted-foreground">
           Page de démo masquée en production. Variantes ticket :{" "}
@@ -157,6 +159,8 @@ export default function DevUiPage() {
           </Card>
         </div>
       </section>
+
+      <NavigationDemo />
     </main>
   );
 }
