@@ -9,44 +9,55 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-type CardVariant = "standard" | "interactive" | "selected";
+type CardVariant = "standard" | "interactive";
+
+type CardSelectionContextValue = {
+  selected: boolean;
+};
+
+const CardSelectionContext = React.createContext<CardSelectionContextValue>({
+  selected: false,
+});
 
 type CardProps = React.ComponentProps<typeof UiCard> & {
   variant?: CardVariant;
+  selected?: boolean;
   selectedLabel?: string;
 };
 
 function Card({
   className,
   variant = "standard",
+  selected = false,
   selectedLabel = "Sélectionnée",
   children,
   ...props
 }: CardProps) {
-  const isSelected = variant === "selected";
   const isInteractive = variant === "interactive";
 
   return (
-    <UiCard
-      data-variant={variant}
-      aria-current={isSelected ? "true" : undefined}
-      className={cn(
-        "relative bg-card text-card-foreground",
-        isInteractive &&
-          "transition-[box-shadow,border-color] hover:ring-2 hover:ring-primary/40 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[color:var(--color-primary-strong)]",
-        isSelected && "ring-2 ring-primary",
-        className,
-      )}
-      {...props}
-    >
-      {isSelected ? (
-        <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-sm font-semibold text-primary-foreground">
-          <Check className="size-4" aria-hidden />
-          {selectedLabel}
-        </span>
-      ) : null}
-      {children}
-    </UiCard>
+    <CardSelectionContext.Provider value={{ selected }}>
+      <UiCard
+        data-variant={variant}
+        data-selected={selected ? "true" : undefined}
+        className={cn(
+          "relative bg-card text-card-foreground",
+          isInteractive &&
+            "overflow-visible transition-[box-shadow,border-color] hover:ring-2 hover:ring-primary/40 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[color:var(--color-primary-strong)]",
+          selected && "ring-2 ring-primary",
+          className,
+        )}
+        {...props}
+      >
+        {selected ? (
+          <span className="absolute top-3 right-3 z-20 inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-sm font-semibold text-primary-foreground">
+            <Check className="size-4" aria-hidden />
+            {selectedLabel}
+          </span>
+        ) : null}
+        {children}
+      </UiCard>
+    </CardSelectionContext.Provider>
   );
 }
 
@@ -98,9 +109,17 @@ function InteractiveCardAction({
   asChild = false,
   ...props
 }: InteractiveCardActionProps) {
+  const { selected } = React.useContext(CardSelectionContext);
+  const selectionProps = {
+    "aria-current": selected ? ("true" as const) : undefined,
+  };
+
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(
-      children as React.ReactElement<{ className?: string }>,
+      children as React.ReactElement<{
+        className?: string;
+        "aria-current"?: string;
+      }>,
       {
         className: cn(
           "absolute inset-0 z-10 rounded-[inherit] focus-visible:outline-none",
@@ -108,6 +127,7 @@ function InteractiveCardAction({
             .className,
           className,
         ),
+        ...selectionProps,
       },
     );
   }
@@ -118,6 +138,7 @@ function InteractiveCardAction({
         "absolute inset-0 z-10 rounded-[inherit] focus-visible:outline-none",
         className,
       )}
+      {...selectionProps}
       {...props}
     >
       <span className="sr-only">{children}</span>

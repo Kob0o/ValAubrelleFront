@@ -4,19 +4,15 @@ import { Button, type ButtonProps } from "@/components/ui/button";
 
 type IconButtonProps = Omit<ButtonProps, "children" | "aria-label" | "size"> & {
   label: string;
-  tooltip?: string;
   children: React.ReactNode;
 };
 
 function IconButton({
   label,
-  tooltip: _tooltip,
   children,
   variant = "ghost",
   ...props
 }: IconButtonProps) {
-  void _tooltip;
-
   return (
     <Button
       type="button"
