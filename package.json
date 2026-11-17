@@ -8,9 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "api:validate": "node scripts/check-api-contract.mjs",
-    "api:generate": "openapi-typescript docs-perso/contrat-api.yml -o src/api-mock/generated/contract.ts",
-    "api:check": "npm run api:validate && openapi-typescript docs-perso/contrat-api.yml -o src/api-mock/generated/contract.ts --check"
+    "generate:api": "openapi-typescript doc/api/openapi.yaml -o src/types/api.d.ts",
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
