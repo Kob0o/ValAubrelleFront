@@ -62,6 +62,18 @@ describe("QualityValue", () => {
     ).toBeInTheDocument();
   });
 
+  it("garde l'icône collée au libellé, aligné à droite sur plusieurs lignes", () => {
+    render(<QualityValue value={mockIndicatorValuesByQuality.insufficient_sample} />);
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("justify-end");
+    const label = button.firstElementChild as HTMLElement;
+    expect(label).toHaveClass("text-right");
+    const icon = label.firstElementChild;
+    expect(icon?.tagName.toLowerCase()).toBe("svg");
+    expect(icon).toHaveClass("inline", "mr-1");
+    expect(label).toHaveTextContent(/^Échantillon insuffisant/);
+  });
+
   it("ouvre l'explication au focus et la ferme avec Échap", async () => {
     const user = userEvent.setup();
     render(<QualityValue value={mockIndicatorValuesByQuality.suppressed} />);

@@ -96,11 +96,18 @@ function QualityValue({
       <Tooltip content={explanation}>
         <button
           type="button"
-          className="inline-flex min-h-11 items-center gap-1 rounded-sm text-base text-[color:var(--color-text-muted)] underline decoration-dotted underline-offset-4 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-primary-strong)]"
+          className="inline-flex min-h-11 items-center justify-end rounded-sm text-base text-[color:var(--color-text-muted)] underline decoration-dotted underline-offset-4 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-primary-strong)]"
         >
-          <Icon aria-hidden className="size-4 shrink-0" />
-          {label}
-          <span className="sr-only">, {reason}</span>
+          {/* Icône en ligne dans le texte : sur plusieurs lignes, elle reste
+              collée au premier mot et l'écart est identique sur toute la colonne. */}
+          <span className="text-right">
+            <Icon
+              aria-hidden
+              className="mr-1 inline size-4 align-[-0.125em]"
+            />
+            {label}
+            <span className="sr-only">, {reason}</span>
+          </span>
         </button>
       </Tooltip>
     </span>
