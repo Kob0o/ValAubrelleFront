@@ -4,25 +4,6 @@ import { cn } from "cn";
 
 import { Label } from "@/components/ui/label";
 
-/**
- * Classes communes à tous les contrôles de saisie (input, déclencheur de Select).
- * - 44 px de haut minimum, texte 16 px (pas de zoom iOS)
- * - bordure Gris ardoise : 3:1 minimum contre le blanc (RGAA 3.3, WCAG 1.4.11),
- *   la bordure `--color-border` de la charte est trop claire pour un champ
- * - focus : bordure + anneau Vert Aubrelle
- * - erreur : bordure plus épaisse, en plus de l'icône et du texte sous le champ
- * - désactivé : reste lisible (pas d'opacité), fond Brume
- * Les primitives de `components/ui` ne sont pas modifiées : on surcharge ici.
- */
-export const fieldControlClassName = cn(
-  "h-11 min-h-11 w-full rounded-[var(--radius)] border border-[var(--color-text-muted)] bg-[var(--color-surface)] px-3 py-2",
-  "text-base font-normal text-[var(--color-text)] md:text-base placeholder:text-[var(--color-text-muted)]",
-  "focus-visible:border-[var(--color-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]",
-  "aria-invalid:border-2 aria-invalid:border-[var(--color-danger)] aria-invalid:ring-0",
-  "aria-invalid:focus-visible:ring-2 aria-invalid:focus-visible:ring-[var(--color-danger)]",
-  "disabled:cursor-not-allowed disabled:border-[var(--color-border)] disabled:bg-[var(--color-surface-alt)] disabled:text-[var(--color-text-muted)] disabled:opacity-100",
-);
-
 /** Attributs à poser sur le contrôle pour le relier au libellé, à l'aide et à l'erreur. */
 export type FieldControlProps = {
   id: string;
@@ -50,7 +31,8 @@ export type FieldWrapperProps = {
 
 /**
  * Libellé + aide + erreur partagés par TextField, Select et les futurs champs
- * (TextArea, PasswordField, MultiSelect…).
+ * (TextArea, PasswordField, MultiSelect…). Les styles des contrôles
+ * (taille, contraste, focus, états) sont dans les primitives `components/ui`.
  * Le libellé est toujours visible ; l'erreur n'est jamais portée par la couleur seule.
  */
 export function FieldWrapper({
@@ -76,20 +58,17 @@ export function FieldWrapper({
 
   return (
     <div className={cn("flex flex-col gap-2", className)} data-slot="field">
-      <Label
-        htmlFor={controlId}
-        className="flex-wrap gap-1 text-base leading-snug font-semibold text-[var(--color-text)]"
-      >
+      <Label htmlFor={controlId} className="flex-wrap gap-1">
         {label}
         {required ? (
-          <span className="font-normal text-[var(--color-text-muted)]">
+          <span className="font-normal text-muted-foreground">
             <span aria-hidden="true">* </span>(obligatoire)
           </span>
         ) : null}
       </Label>
 
       {hint ? (
-        <p id={hintId} className="text-base text-[var(--color-text-muted)]">
+        <p id={hintId} className="text-base text-muted-foreground">
           {hint}
         </p>
       ) : null}
@@ -102,11 +81,9 @@ export function FieldWrapper({
       })}
 
       {error ? (
-        <p
-          id={errorId}
-          className="flex items-start gap-2 text-base font-semibold text-[var(--color-danger)]"
-        >
-          <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+        <p id={errorId} className="flex items-start gap-2 text-base text-destructive">
+          {/* Icône 16 px centrée sur la 1re ligne (interligne 24 px). */}
+          <CircleAlert aria-hidden="true" className="mt-1 size-4 shrink-0" />
           <span>
             <span className="sr-only">Erreur : </span>
             {error}
@@ -115,7 +92,7 @@ export function FieldWrapper({
       ) : null}
 
       {footer ? (
-        <p id={footerId} className="text-base text-[var(--color-text-muted)]">
+        <p id={footerId} className="text-base text-muted-foreground">
           {footer}
         </p>
       ) : null}

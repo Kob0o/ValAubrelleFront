@@ -1,13 +1,9 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { cn } from "cn";
 
+import { FieldWrapper } from "@/components/forms/field-wrapper";
 import { Input } from "@/components/ui/input";
-import {
-  FieldWrapper,
-  fieldControlClassName,
-} from "@/components/forms/field-wrapper";
 
 type NativeInputProps = Omit<
   ComponentProps<"input">,
@@ -92,12 +88,7 @@ export function TextField({
           maxLength={maxLength}
           disabled={disabled}
           readOnly={readOnly}
-          data-readonly={readOnly || undefined}
-          className={cn(
-            fieldControlClassName,
-            "data-readonly:border-dashed data-readonly:bg-[var(--color-surface-alt)]",
-            className,
-          )}
+          className={className}
         />
       )}
     </FieldWrapper>

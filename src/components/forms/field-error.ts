@@ -1,13 +1,7 @@
-/**
- * Forme minimale d'une erreur d'API portant des erreurs par champ
- * (422 `VALIDATION_FAILED` : `fields` = nom du champ → raison).
- * Volontairement structurelle : `ApiError` (#5 G0.B) y sera compatible
- * sans que les champs de formulaire dépendent du client HTTP.
- */
-export type FieldErrorSource =
-  | { fields?: Record<string, string> | null }
-  | null
-  | undefined;
+import type { ApiError } from "@/types/domain";
+
+/** Toute source portant des erreurs par champ, dont `ApiError` (422 `VALIDATION_FAILED`). */
+export type FieldErrorSource = Pick<ApiError, "fields"> | null | undefined;
 
 /** Message d'erreur du champ `name`, à passer à la prop `error` d'un champ. */
 export function getFieldError(

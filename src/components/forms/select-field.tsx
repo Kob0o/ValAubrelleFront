@@ -1,14 +1,18 @@
 "use client";
 
 import { useId, useRef, useState, type KeyboardEvent } from "react";
-import { Command as CommandPrimitive } from "cmdk";
 import { ChevronDown } from "lucide-react";
 import { cn } from "cn";
 
 import {
+  FieldWrapper,
+  type FieldControlProps,
+} from "@/components/forms/field-wrapper";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -23,12 +27,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  selectTriggerClassName,
 } from "@/components/ui/select";
-import {
-  FieldWrapper,
-  fieldControlClassName,
-  type FieldControlProps,
-} from "@/components/forms/field-wrapper";
 
 export type SelectOption = {
   value: string;
@@ -60,34 +60,6 @@ export type SelectFieldProps = {
 
 const DEFAULT_PLACEHOLDER = "Choisir une option";
 const DEFAULT_EMPTY_MESSAGE = "Aucune option disponible";
-
-const triggerClassName = cn(
-  fieldControlClassName,
-  "flex items-center justify-between gap-2 text-left whitespace-nowrap data-[size=default]:h-11",
-  "data-placeholder:text-[var(--color-text-muted)]",
-  "[&_svg]:size-5 [&_svg]:text-[var(--color-text-muted)]",
-);
-
-/** L'option active a un contour visible : le fond Brume seul est trop pâle (3:1). */
-/**
- * Les options occupent toute la largeur de la liste, sans marge. Les options
- * en bord de liste reprennent son arrondi (ajouté par variante : avec la
- * recherche, la première option est sous le champ et reste carrée).
- */
-const listClassName = "rounded-lg p-0";
-
-const optionClassName = cn(
-  "min-h-11 gap-2 py-2.5 pr-10 pl-3 text-base text-[var(--color-text)]",
-  "rounded-none",
-  // Coche de l'option choisie (Select Radix) alignée sur la marge intérieure.
-  "[&>span:first-child]:right-3",
-  // `outline-solid` est nécessaire : la primitive shadcn pose `outline-hidden`
-  // (style `none`), qui rendrait le contour invisible malgré son épaisseur.
-  "focus:outline-2 focus:-outline-offset-2 focus:outline-solid focus:outline-[var(--color-primary)]",
-  "data-[selected=true]:outline-2 data-[selected=true]:-outline-offset-2 data-[selected=true]:outline-solid data-[selected=true]:outline-[var(--color-primary)]",
-  "data-[state=checked]:font-semibold data-[checked=true]:font-semibold",
-  "data-disabled:text-[var(--color-text-muted)] data-disabled:opacity-100",
-);
 
 export function SelectField({
   label,
@@ -136,16 +108,16 @@ export function SelectField({
             disabled={disabled}
             required={required}
           >
-            <SelectTrigger {...control} className={triggerClassName}>
+            <SelectTrigger {...control} className="w-full">
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent
               position="popper"
               sideOffset={4}
-              className={cn("w-(--radix-select-trigger-width)", listClassName)}
+              className="w-(--radix-select-trigger-width)"
             >
               {options.length === 0 ? (
-                <p className="px-3 py-2 text-base text-[var(--color-text-muted)]">
+                <p className="px-3 py-2 text-base text-muted-foreground">
                   {emptyMessage}
                 </p>
               ) : (
@@ -154,10 +126,6 @@ export function SelectField({
                     key={option.value}
                     value={option.value}
                     disabled={option.disabled}
-                    className={cn(
-                      optionClassName,
-                      "first:rounded-t-lg last:rounded-b-lg",
-                    )}
                   >
                     {option.label}
                   </SelectItem>
@@ -184,6 +152,10 @@ type SearchableSelectProps = {
   emptyMessage: string;
 };
 
+/**
+ * Variante filtrable : déclencheur au style de `SelectTrigger`, liste
+ * Command (cmdk) dans un Popover. Réutilisable par le futur MultiSelect.
+ */
 function SearchableSelect({
   control,
   name,
@@ -220,12 +192,16 @@ function SearchableSelect({
             aria-expanded={open}
             aria-controls={contentId}
             disabled={disabled}
+            data-size="default"
             data-placeholder={selected ? undefined : ""}
             onKeyDown={handleTriggerKeyDown}
-            className={triggerClassName}
+            className={cn(selectTriggerClassName, "w-full")}
           >
             <span className="truncate">{selected?.label ?? placeholder}</span>
-            <ChevronDown aria-hidden="true" />
+            <ChevronDown
+              aria-hidden="true"
+              className="text-muted-foreground"
+            />
           </button>
         </PopoverTrigger>
         <PopoverContent
@@ -235,27 +211,14 @@ function SearchableSelect({
           className="w-(--radix-popover-trigger-width) min-w-64 overflow-hidden rounded-lg p-0"
         >
           {/* cmdk nomme le champ de recherche avec `label` (aria-labelledby). */}
-          <Command
-            label={`Rechercher dans ${label}`}
-            className="rounded-lg! p-0"
-          >
-            <CommandPrimitive.Input
-              placeholder="Rechercher…"
-              className={cn(
-                fieldControlClassName,
-                // Collé en haut de la liste : même arrondi qu'elle, bordure basse
-                // seulement, et focus en anneau intérieur (pas l'outline bleu du
-                // navigateur, rogné aux coins par la liste).
-                "rounded-none rounded-t-lg border-x-0 border-t-0 outline-none",
-                "focus-visible:ring-inset",
-              )}
-            />
+          <Command label={`Rechercher dans ${label}`} className="rounded-lg! p-0">
+            <CommandInput placeholder="Rechercher…" />
             <CommandList>
-              <CommandEmpty className="px-3 py-4 text-base text-[var(--color-text-muted)]">
+              <CommandEmpty>
                 {options.length === 0 ? emptyMessage : "Aucun résultat"}
               </CommandEmpty>
               {/* Espace sous la recherche : le contour de la 1re option active
-                ne se colle pas à celui du champ (toujours focus, cmdk). */}
+                  ne se colle pas à celui du champ (toujours focus, cmdk). */}
               <CommandGroup className="p-0 pt-1">
                 {options.map((option) => (
                   <CommandItem
@@ -268,7 +231,9 @@ function SearchableSelect({
                       onChange(option.value);
                       setOpen(false);
                     }}
-                    className={cn(optionClassName, "last:rounded-b-lg")}
+                    // Collée aux bords ; seule la dernière reprend l'arrondi,
+                    // la première est sous le champ de recherche.
+                    className="rounded-none last:rounded-b-lg"
                   >
                     {option.label}
                   </CommandItem>

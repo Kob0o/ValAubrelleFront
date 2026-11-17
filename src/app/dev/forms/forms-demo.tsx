@@ -6,28 +6,24 @@ import { getFieldError } from "@/components/forms/field-error";
 import { SelectField, type SelectOption } from "@/components/forms/select-field";
 import { TextField } from "@/components/forms/text-field";
 import { Button } from "@/components/ui/button";
+import { mockMunicipalities } from "@/mocks";
+import type { ApiError } from "@/types/domain";
+import { ROLES, roleLabels } from "@/types/roles";
 
-/** Quelques communes fictives ; les 32 fixtures typées arrivent avec #5 (G0.B). */
-const communes: SelectOption[] = [
-  { value: "99001", label: "Aubrelle-sur-Loue" },
-  { value: "99002", label: "Bois-Fleuri" },
-  { value: "99003", label: "Champvert" },
-  { value: "99004", label: "Les Granges-Hautes" },
-  { value: "99005", label: "Montclair-d'Aubrelle" },
-  { value: "99006", label: "Saint-Aubin-des-Prés" },
-  { value: "99007", label: "Val-Mousseux", disabled: true },
-  { value: "99008", label: "Vernay-le-Haut" },
-];
+/** Les 32 communes fictives des fixtures (#5 G0.B). */
+const communes: SelectOption[] = mockMunicipalities.map((municipality) => ({
+  value: municipality.code,
+  label: municipality.name,
+}));
 
-const roles: SelectOption[] = [
-  { value: "mayor", label: "Maire" },
-  { value: "community_councillor", label: "Élu communautaire" },
-  { value: "housing_officer", label: "Agent Habitat" },
-  { value: "admin", label: "Administrateur" },
-];
+const roles: SelectOption[] = ROLES.map((role) => ({
+  value: role,
+  label: roleLabels[role],
+}));
 
 /** Réponse 422 simulée, au format `ApiError` du contrat. */
-const validationError = {
+const validationError: ApiError = {
+  httpStatus: 422,
   code: "VALIDATION_FAILED",
   message: "Certains champs sont invalides.",
   fields: {
@@ -72,7 +68,7 @@ export function FormsDemo() {
   const [errorRole, setErrorRole] = useState<string>();
   const [commune, setCommune] = useState<string>();
 
-  const [apiError, setApiError] = useState<typeof validationError | null>(
+  const [apiError, setApiError] = useState<ApiError | null>(
     null,
   );
   const [apiEmail, setApiEmail] = useState("marie.dupont@");
@@ -84,19 +80,20 @@ export function FormsDemo() {
       className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-12 px-6 py-10"
     >
       <header className="flex flex-col gap-3 border-t-4 border-[var(--color-accent)] pt-4">
-        <p className="text-base font-semibold text-[var(--color-primary)]">
+        <p className="text-base font-semibold text-primary">
           Page de démonstration — masquée en production
         </p>
         <h1 className="text-4xl font-extrabold tracking-tight text-[var(--color-primary-strong)]">
           Champs de saisie et de choix
         </h1>
-        <p className="max-w-2xl text-base text-[var(--color-text)]">
+        <p className="max-w-2xl text-base text-foreground">
           Tous les états de TextField et Select. L’état « focus » et les états
           ouverts se voient au clavier : Tab pour avancer, Entrée, Espace ou
           les flèches pour ouvrir une liste, Échap pour la fermer.
         </p>
-        <p className="text-base text-[var(--color-text-muted)]">
-          Les champs marqués d’un astérisque (*) sont obligatoires.
+        <p className="text-base text-muted-foreground">
+          Les champs marqués d’un astérisque (*) sont obligatoires. Toutes les
+          données affichées sont fictives.
         </p>
       </header>
 
@@ -137,6 +134,7 @@ export function FormsDemo() {
           value="Valeur non modifiable"
           onChange={() => {}}
           disabled
+          hint="Champ inactif tant que le rôle n’est pas choisi."
         />
         <TextField
           label="Lecture seule"
@@ -144,6 +142,7 @@ export function FormsDemo() {
           value="Communauté d’agglomération du Val d’Aubrelle"
           onChange={() => {}}
           readOnly
+          hint="Défini par l’administrateur, non modifiable ici."
         />
         <TextField
           label="Objet de la demande"
@@ -217,7 +216,7 @@ export function FormsDemo() {
           onChange={setCommune}
           searchable
           placeholder="Choisir une commune"
-          hint="Tapez pour filtrer la liste. Val-Mousseux est indisponible."
+          hint="Tapez pour filtrer les 32 communes."
         />
       </DemoSection>
 
@@ -228,7 +227,7 @@ export function FormsDemo() {
         >
           Erreurs renvoyées par l’API (422)
         </h2>
-        <p className="max-w-2xl text-base text-[var(--color-text)]">
+        <p className="max-w-2xl text-base text-foreground">
           Simulation : les messages viennent de <code>ApiError.fields</code>{" "}
           et sont reliés à chaque champ.
         </p>
