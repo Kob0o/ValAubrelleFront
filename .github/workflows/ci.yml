@@ -3,7 +3,6 @@ name: Build & deploy dev
 on:
   push:
     branches: [develop]
-  pull_request:
   workflow_dispatch:
 
 # Two deploys must not commit to the infra repo at the same time
@@ -42,9 +41,7 @@ jobs:
         run: npm test
 
   build-push:
-    needs: check
-    # Pull requests only run lint + tests
-    if: github.event_name != 'pull_request'
+    needs: verify
     runs-on: [self-hosted, linux]
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
