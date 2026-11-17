@@ -60,7 +60,18 @@ export function FeedbackDemo() {
           <Banner
             kind="warning"
             title="Données partielles"
-            action={<Button variant="outline">Voir le détail</Button>}
+            action={
+              <Button
+                variant="outline"
+                onClick={() =>
+                  feedback.info(
+                    "Communes en attente : Lille, Roubaix, Tourcoing (données fictives).",
+                  )
+                }
+              >
+                Voir le détail
+              </Button>
+            }
           >
             3 communes n’ont pas encore transmis leurs données 2024.
           </Banner>
