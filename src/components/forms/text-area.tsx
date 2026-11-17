@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { cn } from "cn";
 
 import { FieldWrapper } from "@/components/forms/field-wrapper";
@@ -19,6 +19,7 @@ type NativeTextareaProps = Omit<
   | "children"
 >;
 
+/** Zone de texte : mêmes règles et même API que `TextField` (G0.F). */
 export type TextAreaProps = NativeTextareaProps & {
   label: string;
   name: string;
@@ -26,9 +27,9 @@ export type TextAreaProps = NativeTextareaProps & {
   onChange: (value: string) => void;
   /** Message d'erreur, par ex. `getFieldError(apiError, name)` sur un 422. */
   error?: string;
-  /** Consigne affichée dans l'infobulle d'aide (jamais dans `placeholder`). */
+  /** Consigne affichée dans l'infobulle à côté du libellé. */
   hint?: string;
-  /** Exemple de valeur, facultatif ; jamais une consigne. */
+  /** Exemple de valeur uniquement, jamais une consigne. */
   placeholder?: string;
   required?: boolean;
   /** Hauteur minimale en lignes ; le champ s'agrandit ensuite avec le texte. */
@@ -61,13 +62,9 @@ export function counterAnnouncement(length: number, maxLength: number): string {
   }
   // Arrondi au palier supérieur : le message ne change que tous les 10 caractères.
   const step = Math.ceil(remaining / 10) * 10;
-  return `Moins de ${numberFormat.format(step)} caractères restants.`;
+  return `Au plus ${numberFormat.format(step)} caractères restants.`;
 }
 
-/**
- * Texte long : mêmes libellé, aide et erreur que `TextField` (`FieldWrapper`),
- * compteur de caractères et blocage au-delà de `maxLength`.
- */
 export function TextArea({
   label,
   name,
@@ -76,11 +73,11 @@ export function TextArea({
   error,
   hint,
   required = false,
-  rows = 4,
   maxLength,
   showCounter = false,
   disabled = false,
   readOnly = false,
+  rows = 10,
   id,
   className,
   ...textareaProps

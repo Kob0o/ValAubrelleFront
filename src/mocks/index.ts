@@ -12,3 +12,6 @@ export {
   mockSectionStatuses,
   type StatusSample,
 } from "@/mocks/statuses";
+export { mockManualSectionInput, mockReportDraft } from "@/mocks/report-draft";
+export { createMockReportsApi } from "@/mocks/reports-api";
+export { mockExplorerYears } from "@/mocks/years";

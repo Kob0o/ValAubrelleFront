@@ -45,7 +45,7 @@ describe("TextArea", () => {
     expect(textarea).toHaveAccessibleDescription(
       "Décrivez la situation du logement. Erreur : Les précisions sont obligatoires.",
     );
-    expect(textarea).toHaveAttribute("rows", "4");
+    expect(textarea).toHaveAttribute("rows", "10");
   });
 
   it("affiche le compteur au format français", () => {
@@ -92,19 +92,21 @@ describe("TextArea", () => {
     expect(live).toHaveTextContent("");
 
     fireEvent.change(textarea, { target: { value: "a".repeat(85) } });
-    expect(live).toHaveTextContent("Moins de 20 caractères restants.");
+    expect(live).toHaveTextContent("Au plus 20 caractères restants.");
 
     fireEvent.change(textarea, { target: { value: "a".repeat(100) } });
     expect(live).toHaveTextContent("Limite de 100 caractères atteinte.");
   });
 
   it("change l'annonce par paliers de 10 caractères seulement", () => {
-    expect(counterAnnouncement(3985, 4000)).toBe("Moins de 20 caractères restants.");
-    expect(counterAnnouncement(3989, 4000)).toBe("Moins de 20 caractères restants.");
-    expect(counterAnnouncement(3990, 4000)).toBe("Moins de 10 caractères restants.");
+    expect(counterAnnouncement(3985, 4000)).toBe("Au plus 20 caractères restants.");
+    expect(counterAnnouncement(3989, 4000)).toBe("Au plus 20 caractères restants.");
+    // Il reste exactement 10 caractères : « au plus 10 », pas « moins de 10 ».
+    expect(counterAnnouncement(3990, 4000)).toBe("Au plus 10 caractères restants.");
+    expect(counterAnnouncement(3991, 4000)).toBe("Au plus 10 caractères restants.");
     expect(counterAnnouncement(3000, 4000)).toBe("");
     expect(counterAnnouncement(3600, 4000)).toBe(
-      `Moins de 400 caractères restants.`,
+      `Au plus 400 caractères restants.`,
     );
     expect(counterAnnouncement(4000, 4000)).toBe(
       `Limite de 4${NNBSP}000 caractères atteinte.`,
