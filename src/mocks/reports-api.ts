@@ -1,24 +1,28 @@
 import { buildApiError } from "@/lib/api/errors";
-import { SECTION_TITLE_MAX_LENGTH, type ReportsApi } from "@/lib/api/reports";
+import {
+  SECTION_TITLE_MAX_LENGTH,
+  type ReportDraftWithManual,
+  type ReportsApi,
+} from "@/lib/api/reports";
 import { mockReportDraft } from "@/mocks/report-draft";
-import type { ReportDraft } from "@/types/domain";
 
 
 type MockOptions = {
-  initial?: ReportDraft;
+  initial?: ReportDraftWithManual;
   /** Latence simulée en ms (0 dans les tests). */
   latency?: number;
 };
 
 /**
- * Client Rapports en mémoire, conforme au contrat OpenAPI (routes, corps,
+ * Client Rapports en mémoire, conforme au contrat (v1.0.0 et création
+ * manuelle de la PR back #35, en attente du contrat 1.1.0) : routes, corps,
  * codes d'erreur). Remplacé par un client HTTP quand le back sera implémenté.
  */
 export function createMockReportsApi({
   initial = mockReportDraft,
   latency = 0,
 }: MockOptions = {}): ReportsApi {
-  const draft: ReportDraft = structuredClone(initial);
+  const draft: ReportDraftWithManual = structuredClone(initial);
   const sections = (draft.sections ??= []);
   const idempotency = new Map<string, string>();
 

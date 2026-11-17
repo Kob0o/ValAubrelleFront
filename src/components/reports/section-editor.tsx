@@ -28,7 +28,7 @@ export type SectionEditorInitial = Required<
 >;
 
 type CreateModeProps = {
-  /** POST /reports/drafts/{reportId}/sections (createManualReportSection). */
+  /** POST /reports/drafts/{reportId}/sections (PR back #35, contrat 1.1.0 en attente). */
   onCreate: (
     input: CreateSectionInput,
     idempotencyKey: string,

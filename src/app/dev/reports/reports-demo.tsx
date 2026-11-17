@@ -9,10 +9,9 @@ import {
 } from "@/components/reports/section-list";
 import { Button } from "@/components/ui/button";
 import { buildApiError } from "@/lib/api/errors";
-import type { ReportsApi } from "@/lib/api/reports";
+import type { ReportDraftWithManual, ReportsApi } from "@/lib/api/reports";
 import { mockReportDraft } from "@/mocks/report-draft";
 import { createMockReportsApi } from "@/mocks/reports-api";
-import type { ReportDraft } from "@/types/domain";
 
 type SimulatedError = "none" | "server" | "unavailable" | "conflict";
 
@@ -20,7 +19,7 @@ type SimulatedError = "none" | "server" | "unavailable" | "conflict";
 export function ReportsDemo({ latency = 600 }: { latency?: number }) {
   const baseApi = useMemo(() => createMockReportsApi(), []);
   const [simulated, setSimulated] = useState<SimulatedError>("none");
-  const [draft, setDraft] = useState<ReportDraft | null>(null);
+  const [draft, setDraft] = useState<ReportDraftWithManual | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const api: ReportsApi = useMemo(() => {
@@ -95,8 +94,8 @@ export function ReportsDemo({ latency = 600 }: { latency?: number }) {
           className="rounded-[var(--radius)] border-2 border-dashed border-[var(--color-warning)] bg-[var(--color-surface-alt)] px-3 py-2 text-base text-[var(--color-text)]"
         >
           <strong>Données fictives — client {api.kind}.</strong> Les routes
-          du contrat ne sont pas encore implémentées par le back : les
-          réponses sont simulées.
+          ne sont pas encore implémentées par le back, et la création manuelle
+          attend le contrat 1.1.0 : les réponses sont simulées.
         </p>
         <fieldset className="flex flex-wrap items-center gap-4 text-base">
           <legend className="mb-1 font-semibold">Simuler une réponse</legend>
