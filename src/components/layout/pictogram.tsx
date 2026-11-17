@@ -1,11 +1,13 @@
-import type { SVGProps } from "react";
+import { useId, type SVGProps } from "react";
+import { charter } from "@/theme/tokens";
 
 type PictogramProps = SVGProps<SVGSVGElement> & {
   title?: string;
+  variant?: "default" | "on-dark";
 };
 
-export function Pictogram({ title, ...props }: PictogramProps) {
-  const clipId = "val-aubrelle-pictogram";
+export function Pictogram({ title, variant = "default", ...props }: PictogramProps) {
+  const clipId = `val-aubrelle-pictogram-${useId().replace(/:/g, "")}`;
 
   return (
     <svg
@@ -24,9 +26,9 @@ export function Pictogram({ title, ...props }: PictogramProps) {
         </clipPath>
       </defs>
       <g clipPath={`url(#${clipId})`}>
-        <rect width="64" height="64" fill="#2E7D5B" />
-        <path fill="#8CC63F" d="M-1 42C15 33 49 33 65 42V66H-1Z" />
-        <path fill="#1F5C42" d="M-1 55C16 49 48 49 65 55V66H-1Z" />
+        <rect width="64" height="64" fill={variant === "on-dark" ? charter.surface : charter.primary} />
+        <path fill={charter.accent} d="M-1 42C15 33 49 33 65 42V66H-1Z" />
+        <path fill={variant === "on-dark" ? charter.primary : charter.primaryStrong} d="M-1 55C16 49 48 49 65 55V66H-1Z" />
       </g>
     </svg>
   );

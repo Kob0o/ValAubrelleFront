@@ -57,7 +57,7 @@ function valAubrelleTheme(): Theme {
       "--accent-foreground": charter.text,
       "--destructive": charter.danger,
       "--border": charter.border,
-      "--input": charter.border,
+      "--input": charter.textMuted,
       "--ring": charter.primaryStrong,
       "--chart-1": charter.dataSeq[0],
       "--chart-2": charter.dataSeq[1],
