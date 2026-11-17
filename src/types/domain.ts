@@ -1,4 +1,4 @@
-import type { components } from "@/types/api";
+import type { components, operations } from "@/types/api";
 
 type Schemas = components["schemas"];
 
@@ -19,6 +19,11 @@ export type ReportStatus = Schemas["ReportStatus"];
 export type AccountStatus = Schemas["AccountStatus"];
 export type ReportDraft = Schemas["ReportDraft"];
 export type Report = Schemas["Report"];
+export type Period = Schemas["Period"];
+
+/** Année proposée par GET /explorer (`years`), source de YearPicker. */
+export type ExplorerYear =
+  operations["getExplorer"]["responses"][200]["content"]["application/json"]["years"][number];
 
 export type RequestItem = Schemas["RequestSummary"];
 export type ReportItem = Schemas["PublishedReportSummary"];
@@ -100,10 +105,10 @@ export const SECTION_STATUSES = [
 export const statusLabels = {
   quality: {
     available: "Disponible",
-    missing: "Absente",
-    insufficient_sample: "Petit effectif",
-    suppressed: "Masquée",
-    source_error: "Source en erreur",
+    missing: "Donnée absente",
+    insufficient_sample: "Échantillon insuffisant",
+    suppressed: "Non diffusable",
+    source_error: "Erreur de source",
     not_computable: "Non calculable",
   } satisfies Record<QualityStatus, string>,
   request: {

@@ -218,7 +218,11 @@ function MultiSelectControl({
     return list;
   }, [ungrouped, groups]);
 
-  const activeOption = flatOptions[activeIndex];
+  const safeActiveIndex = Math.max(
+    0,
+    Math.min(activeIndex, flatOptions.length - 1),
+  );
+  const activeOption = flatOptions[safeActiveIndex];
   const activeOptionId = activeOption
     ? `${listId}-opt-${activeOption.value}`
     : undefined;
@@ -236,20 +240,12 @@ function MultiSelectControl({
 
   useEffect(() => {
     if (!open) return;
-    setActiveIndex(0);
     if (searchable) {
       queueMicrotask(() => searchRef.current?.focus());
     } else {
       queueMicrotask(() => listRef.current?.focus());
     }
   }, [open, searchable]);
-
-  useEffect(() => {
-    setActiveIndex((current) => {
-      if (flatOptions.length === 0) return 0;
-      return Math.min(current, flatOptions.length - 1);
-    });
-  }, [flatOptions.length]);
 
   useEffect(() => {
     if (!open || !activeOptionId) return;
@@ -288,19 +284,20 @@ function MultiSelectControl({
   function moveActive(delta: number) {
     if (flatOptions.length === 0) return;
     setActiveIndex((current) => {
-      let next = current;
+      const start = Math.max(0, Math.min(current, flatOptions.length - 1));
+      let next = start;
       for (let step = 0; step < flatOptions.length; step += 1) {
         next = (next + delta + flatOptions.length) % flatOptions.length;
         const option = flatOptions[next];
         const selected = selectedSet.has(option.value);
         if (!isOptionDisabled(option, selected, atMax)) return next;
       }
-      return current;
+      return start;
     });
   }
 
   function toggleActive() {
-    const option = flatOptions[activeIndex];
+    const option = flatOptions[safeActiveIndex];
     if (!option) return;
     const selected = selectedSet.has(option.value);
     if (isOptionDisabled(option, selected, atMax)) return;
@@ -310,6 +307,7 @@ function MultiSelectControl({
   function handleTriggerKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
+      setActiveIndex(0);
       setOpen(true);
       return;
     }
@@ -366,7 +364,9 @@ function MultiSelectControl({
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
-    if (!next) {
+    if (next) {
+      setActiveIndex(0);
+    } else {
       setSearch("");
       setActiveIndex(0);
       queueMicrotask(() => triggerRef.current?.focus());
@@ -376,7 +376,7 @@ function MultiSelectControl({
   function renderOption(option: MultiSelectOption, isLast: boolean) {
     const selected = selectedSet.has(option.value);
     const optionDisabled = isOptionDisabled(option, selected, atMax);
-    const active = flatOptions[activeIndex]?.value === option.value;
+    const active = activeOption?.value === option.value;
     const optionDomId = `${listId}-opt-${option.value}`;
 
     return (
@@ -435,7 +435,7 @@ function MultiSelectControl({
             role="combobox"
             aria-expanded={open}
             aria-controls={panelId}
-            aria-haspopup="listbox"
+            aria-haspopup="dialog"
             aria-describedby={[control["aria-describedby"], liveId]
               .filter(Boolean)
               .join(" ")}
@@ -472,7 +472,10 @@ function MultiSelectControl({
                 ref={searchRef}
                 type="search"
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setActiveIndex(0);
+                }}
                 onKeyDown={handleListKeyDown}
                 aria-label={`Rechercher dans ${label}`}
                 aria-controls={listId}

@@ -121,18 +121,7 @@ export function FieldWrapper({
         ) : null}
       </div>
 
-      {error ? (
-        <p id={errorId} className="flex items-start gap-2 text-base text-destructive">
-          {/* Case de la hauteur d'une ligne : l'icône reste alignée sur la 1re ligne. */}
-          <span className="flex h-[1lh] shrink-0 items-center">
-            <CircleAlert aria-hidden="true" className="size-4" />
-          </span>
-          <span>
-            <span className="sr-only">Erreur : </span>
-            {error}
-          </span>
-        </p>
-      ) : null}
+      {error ? <FieldErrorMessage id={errorId}>{error}</FieldErrorMessage> : null}
 
       {footer ? (
         <p id={footerId} className="text-base text-muted-foreground">
@@ -174,5 +163,24 @@ function FieldHint({ label, hint }: { label: string; hint: string }) {
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
+  );
+}
+
+/**
+ * Message d'erreur : icône + texte + préfixe « Erreur : » pour les lecteurs
+ * d'écran. Partagé par les champs et les groupes (PeriodPicker…).
+ */
+export function FieldErrorMessage({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <p id={id} className="flex items-start gap-2 text-base text-destructive">
+      {/* Case de la hauteur d'une ligne : l'icône reste alignée sur la 1re ligne. */}
+      <span className="flex h-[1lh] shrink-0 items-center">
+        <CircleAlert aria-hidden="true" className="size-4" />
+      </span>
+      <span>
+        <span className="sr-only">Erreur : </span>
+        {children}
+      </span>
+    </p>
   );
 }
