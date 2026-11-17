@@ -102,9 +102,7 @@ describe("useFeedback", () => {
         .click();
     });
     expect(writeText).toHaveBeenCalledWith(CORRELATION_ID);
-    expect(
-      within(toastElement).getByRole("button", { name: "Référence copiée" }),
-    ).toBeInTheDocument();
+    expect(within(toastElement).getByText("Référence copiée")).toBeInTheDocument();
   });
 
   it("n'affiche pas de correlationId hors 5xx", async () => {

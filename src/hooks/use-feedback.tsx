@@ -75,7 +75,7 @@ const feedback: Feedback = {
           description || reference ? (
             <span className="flex flex-col gap-2">
               {description ? <span>{description}</span> : null}
-              {reference ? <CorrelationId value={reference} /> : null}
+              {reference ? <CorrelationId id={reference} /> : null}
             </span>
           ) : undefined,
         duration: Infinity,

@@ -187,7 +187,7 @@ export function SectionEditor(props: SectionEditorProps) {
             <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
             {describeError(error)}
           </p>
-          {correlationId ? <CorrelationId value={correlationId} /> : null}
+          {correlationId ? <CorrelationId id={correlationId} /> : null}
           {isVersionConflict(error) && props.onReload ? (
             <div>
               <Button type="button" variant="secondary" onClick={props.onReload}>
