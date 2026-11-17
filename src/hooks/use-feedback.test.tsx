@@ -151,7 +151,7 @@ describe("Toaster : boutons accessibles (charte, RGAA)", () => {
     });
 
     const close = await screen.findByRole("button", { name: "Fermer la notification" });
-    expect(close).toHaveClass("size-11!", "top-1/2!", "right-1!", "left-auto!", "-translate-y-1/2!");
+    expect(close).toHaveClass("size-11!", "top-1/2!", "right-1!", "left-auto!", "transform-none!", "-translate-y-1/2!");
     expect(close.closest("li")).toHaveClass("has-[[data-close-button]]:pr-14!");
   });
 
