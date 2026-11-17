@@ -2,9 +2,17 @@
 
 import { useState, type ReactNode } from "react";
 
+import { Checkbox, type CheckboxState } from "@/components/forms/checkbox";
 import { getFieldError } from "@/components/forms/field-error";
+import {
+  PasswordField,
+  type PasswordRule,
+} from "@/components/forms/password-field";
+import { Radio, RadioGroup } from "@/components/forms/radio-group";
 import { SelectField, type SelectOption } from "@/components/forms/select-field";
+import { TextArea } from "@/components/forms/text-area";
 import { TextField } from "@/components/forms/text-field";
+import { Toggle } from "@/components/forms/toggle";
 import { Button } from "@/components/ui/button";
 import { mockMunicipalities } from "@/mocks";
 import type { ApiError } from "@/types/domain";
@@ -31,6 +39,25 @@ const validationError: ApiError = {
     municipality: "Choisissez la commune concernée par la demande.",
   },
 };
+
+/**
+ * Règles fictives de démonstration : la liste réelle et ses identifiants ne
+ * sont pas encore dans le contrat (seul `failedRules` l'est, à demander au back).
+ */
+function demoPasswordRules(value: string): PasswordRule[] {
+  return [
+    { id: "length", label: "12 caractères minimum", met: value.length >= 12 },
+    { id: "digit", label: "Au moins un chiffre", met: /\d/.test(value) },
+    {
+      id: "case",
+      label: "Au moins une majuscule et une minuscule",
+      met: /[a-z]/.test(value) && /[A-Z]/.test(value),
+    },
+  ];
+}
+
+/** 4 000 caractères : limite de `text` sur `POST /requests/{id}/details-reply`. */
+const DETAILS_REPLY_MAX_LENGTH = 4000;
 
 function DemoSection({
   id,
@@ -77,6 +104,42 @@ export function FormsDemo() {
   const [apiEmail, setApiEmail] = useState("marie.dupont@");
   const [apiCommune, setApiCommune] = useState<string>();
 
+  // G2.A
+  const [loginPassword, setLoginPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("aubrelle");
+  const [validPassword, setValidPassword] = useState("Aubrelle-2026");
+  const [errorPassword, setErrorPassword] = useState("aubrelle");
+
+  const [emptyText, setEmptyText] = useState("");
+  const [filledText, setFilledText] = useState(
+    "Le logement situé au 12 rue des Tilleuls est inoccupé depuis 2023.",
+  );
+  const [errorText, setErrorText] = useState("");
+  const [fullText, setFullText] = useState("Réponse complète.".padEnd(200, "."));
+
+  const [visibility, setVisibility] = useState<string>();
+  const [period, setPeriod] = useState("year");
+  const [errorVisibility, setErrorVisibility] = useState<string>();
+
+  const [notifications, setNotifications] = useState<CheckboxState>(false);
+  const [newsletter, setNewsletter] = useState<CheckboxState>(true);
+  const [allCommunes, setAllCommunes] = useState<CheckboxState>("indeterminate");
+  const [terms, setTerms] = useState<CheckboxState>(false);
+
+  const [mapLayer, setMapLayer] = useState(false);
+  const [alerts, setAlerts] = useState(true);
+  const [accountActive, setAccountActive] = useState(true);
+  const [accountPending, setAccountPending] = useState(false);
+
+  function toggleAccount(next: boolean) {
+    // Simule un appel serveur de 2 s (ex. PATCH du statut du compte).
+    setAccountPending(true);
+    window.setTimeout(() => {
+      setAccountActive(next);
+      setAccountPending(false);
+    }, 2000);
+  }
+
   return (
     <main
       id="contenu"
@@ -90,9 +153,11 @@ export function FormsDemo() {
           Champs de saisie et de choix
         </h1>
         <p className="max-w-2xl text-base text-foreground">
-          Tous les états de TextField et Select. L’état « focus » et les états
+          Tous les états de TextField, Select, PasswordField, TextArea,
+          RadioGroup, Checkbox et Toggle. L’état « focus » et les états
           ouverts se voient au clavier : Tab pour avancer, Entrée, Espace ou
-          les flèches pour ouvrir une liste, Échap pour la fermer.
+          les flèches pour ouvrir une liste, Échap pour la fermer ; flèches
+          dans un groupe radio, Espace sur une case ou un interrupteur.
         </p>
         <p className="text-base text-muted-foreground">
           Les champs obligatoires portent le badge « Obligatoire ». L’aide
@@ -237,6 +302,240 @@ export function FormsDemo() {
           placeholder="Choisir une commune"
           hint="Tapez pour filtrer les 32 communes."
         />
+      </DemoSection>
+
+      <DemoSection id="passwordfield" title="PasswordField">
+        <PasswordField
+          label="Mot de passe (connexion)"
+          name="login-password"
+          autoComplete="current-password"
+          value={loginPassword}
+          onChange={setLoginPassword}
+          required
+        />
+        <PasswordField
+          label="Nouveau mot de passe (règles échouées)"
+          name="new-password"
+          autoComplete="new-password"
+          value={newPassword}
+          onChange={setNewPassword}
+          rules={demoPasswordRules(newPassword)}
+          hint="Règles fictives de démonstration."
+        />
+        <PasswordField
+          label="Nouveau mot de passe (règles satisfaites)"
+          name="valid-password"
+          autoComplete="new-password"
+          value={validPassword}
+          onChange={setValidPassword}
+          rules={demoPasswordRules(validPassword)}
+        />
+        <PasswordField
+          label="Nouveau mot de passe (erreur 422)"
+          name="error-password"
+          autoComplete="new-password"
+          value={errorPassword}
+          onChange={setErrorPassword}
+          rules={demoPasswordRules(errorPassword)}
+          error="Le mot de passe ne respecte pas toutes les règles."
+        />
+        <PasswordField
+          label="Mot de passe (désactivé)"
+          name="disabled-password"
+          value="motdepasse"
+          onChange={() => {}}
+          disabled
+        />
+      </DemoSection>
+
+      <DemoSection id="textarea" title="TextArea">
+        <TextArea
+          label="Vide"
+          name="empty-text"
+          value={emptyText}
+          onChange={setEmptyText}
+          placeholder="Ex. : Le logement est vacant depuis 2023."
+        />
+        <TextArea
+          label="Précisions (compteur)"
+          name="details"
+          value={filledText}
+          onChange={setFilledText}
+          maxLength={DETAILS_REPLY_MAX_LENGTH}
+          showCounter
+          hint="4 000 caractères maximum. Le reste est annoncé près de la limite."
+        />
+        <TextArea
+          label="Réponse"
+          name="error-text"
+          value={errorText}
+          onChange={setErrorText}
+          required
+          error="Saisissez votre réponse au service Habitat."
+        />
+        <TextArea
+          label="Limite atteinte"
+          name="full-text"
+          value={fullText}
+          onChange={setFullText}
+          maxLength={200}
+          showCounter
+        />
+        <TextArea
+          label="Désactivé"
+          name="disabled-text"
+          value="Texte non modifiable"
+          onChange={() => {}}
+          disabled
+        />
+        <TextArea
+          label="Lecture seule"
+          name="readonly-text"
+          value="Demande transmise le 12 novembre 2026 au service Habitat."
+          onChange={() => {}}
+          readOnly
+        />
+      </DemoSection>
+
+      <DemoSection id="radiogroup" title="RadioGroup">
+        <RadioGroup
+          legend="Visibilité (aucun choix)"
+          name="visibility"
+          value={visibility}
+          onChange={setVisibility}
+          hint="Qui pourra lire ce rapport une fois publié."
+        >
+          <Radio value="internal" label="Service Habitat uniquement" />
+          <Radio
+            value="elected"
+            label="Élus de la commune"
+            description="Le maire et les élus communaux."
+          />
+          <Radio value="public" label="Public" />
+        </RadioGroup>
+        <RadioGroup
+          legend="Période (choix actif, option désactivée)"
+          name="period"
+          value={period}
+          onChange={setPeriod}
+        >
+          <Radio value="year" label="Dernière année" />
+          <Radio value="five-years" label="5 dernières années" />
+          <Radio
+            value="all"
+            label="Depuis 2010"
+            description="Données antérieures non encore publiées."
+            disabled
+          />
+        </RadioGroup>
+        <RadioGroup
+          legend="Visibilité du rapport"
+          name="error-visibility"
+          value={errorVisibility}
+          onChange={setErrorVisibility}
+          required
+          error="Choisissez la visibilité du rapport."
+          orientation="horizontal"
+        >
+          <Radio value="internal" label="Interne" />
+          <Radio value="public" label="Public" />
+        </RadioGroup>
+        <RadioGroup
+          legend="Groupe désactivé"
+          name="disabled-group"
+          value="internal"
+          onChange={() => {}}
+          disabled
+        >
+          <Radio value="internal" label="Interne" />
+          <Radio value="public" label="Public" />
+        </RadioGroup>
+      </DemoSection>
+
+      <DemoSection id="checkbox" title="Checkbox">
+        <div className="flex flex-col gap-2">
+          <Checkbox
+            label="Décochée"
+            checked={notifications}
+            onChange={setNotifications}
+          />
+          <Checkbox
+            label="Cochée"
+            checked={newsletter}
+            onChange={setNewsletter}
+            description="Un e-mail à chaque nouvelle demande."
+          />
+          <Checkbox
+            label="Toutes les communes (indéterminée)"
+            checked={allCommunes}
+            onChange={setAllCommunes}
+            description="Une partie seulement des communes est sélectionnée."
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Checkbox
+            label="J’ai vérifié les sources citées"
+            checked={terms}
+            onChange={setTerms}
+            required
+            error="Cochez cette case pour publier le rapport."
+          />
+          <Checkbox
+            label="Désactivée (cochée)"
+            checked
+            onChange={() => {}}
+            disabled
+          />
+          <Checkbox
+            label="Désactivée (décochée)"
+            checked={false}
+            onChange={() => {}}
+            disabled
+          />
+        </div>
+      </DemoSection>
+
+      <DemoSection id="toggle" title="Toggle">
+        <div className="flex flex-col gap-2">
+          <Toggle
+            label="Afficher la couche DPE"
+            checked={mapLayer}
+            onChange={setMapLayer}
+          />
+          <Toggle
+            label="Alertes par e-mail"
+            checked={alerts}
+            onChange={setAlerts}
+            description="Prévenu quand une demande vous est attribuée."
+          />
+          <Toggle
+            label="Compte actif (enregistrement 2 s)"
+            checked={accountActive}
+            onChange={toggleAccount}
+            pending={accountPending}
+            description="Simule un appel serveur : les clics sont ignorés pendant l’enregistrement."
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Toggle
+            label="En attente (permanent)"
+            checked
+            onChange={() => {}}
+            pending
+          />
+          <Toggle
+            label="En erreur"
+            checked={false}
+            onChange={() => {}}
+            error="Le changement n’a pas été enregistré. Réessayez."
+          />
+          <Toggle
+            label="Désactivé"
+            checked={false}
+            onChange={() => {}}
+            disabled
+          />
+        </div>
       </DemoSection>
 
       <section aria-labelledby="api" className="flex flex-col gap-6">
