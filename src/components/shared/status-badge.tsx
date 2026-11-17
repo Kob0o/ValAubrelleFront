@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect } from "react";
+
 import { cn } from "@/lib/utils";
 
 import {
@@ -44,9 +48,11 @@ function StatusBadge({
 }: StatusBadgeProps) {
   const { known, label, icon: Icon, tone } = resolveStatus(kind, status);
 
-  if (!known && process.env.NODE_ENV !== "production") {
-    console.warn(`StatusBadge : statut « ${status} » inconnu pour « ${kind} ».`);
-  }
+  useEffect(() => {
+    if (!known && process.env.NODE_ENV !== "production") {
+      console.warn(`StatusBadge : statut « ${status} » inconnu pour « ${kind} ».`);
+    }
+  }, [kind, status, known]);
 
   return (
     <span

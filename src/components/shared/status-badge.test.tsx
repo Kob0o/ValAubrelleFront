@@ -65,6 +65,14 @@ describe("StatusBadge", () => {
     expect(warn).toHaveBeenCalledOnce();
   });
 
+  it("n'avertit pas de nouveau à chaque re-rendu", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const props = { kind: "report", status: "archived" } as unknown as StatusBadgeProps;
+    const { rerender } = render(<StatusBadge {...props} />);
+    rerender(<StatusBadge {...props} size="compact" />);
+    expect(warn).toHaveBeenCalledOnce();
+  });
+
   it("n'accepte pas une clé héritée de Object comme statut", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     render(

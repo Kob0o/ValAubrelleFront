@@ -52,6 +52,28 @@ describe("CorrelationId", () => {
     expect(status).toHaveTextContent("Référence copiée");
   });
 
+  it("vide puis réécrit le message à chaque copie pour qu'il soit réannoncé", async () => {
+    let resolveCopy: () => void = () => {};
+    const writeText = vi
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockImplementationOnce(
+        () => new Promise<void>((resolve) => { resolveCopy = resolve; }),
+      );
+    mockClipboard(writeText);
+    render(<CorrelationId id={ID} />);
+    const status = screen.getByText("", { selector: "[aria-live]" });
+
+    await clickCopy();
+    expect(status).toHaveTextContent("Référence copiée");
+
+    await clickCopy();
+    expect(status).toHaveTextContent(/^$/);
+
+    await act(async () => resolveCopy());
+    expect(status).toHaveTextContent("Référence copiée");
+  });
+
   it("affiche un message d'échec si la copie est refusée", async () => {
     mockClipboard(vi.fn().mockRejectedValue(new Error("refus")));
     render(<CorrelationId id={ID} />);

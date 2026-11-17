@@ -30,6 +30,8 @@ function CorrelationId({
   const [state, setState] = useState<CopyState>("idle");
 
   async function copy() {
+    // Repartir de « idle » pour que le message soit réannoncé à chaque clic.
+    setState("idle");
     try {
       if (!navigator.clipboard) throw new Error("Presse-papiers indisponible");
       await navigator.clipboard.writeText(id);
