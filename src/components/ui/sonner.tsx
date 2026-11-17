@@ -18,7 +18,7 @@ export const toastClassNames = {
   title: "text-base font-semibold",
   description: "text-base text-muted-foreground",
   closeButton:
-    "size-11! top-1! right-1! left-auto! transform-none! rounded-md! focus-visible:outline-2! focus-visible:outline-offset-2! focus-visible:outline-[var(--color-primary-strong)]! [&_svg]:size-4",
+    "size-11! top-1/2! right-1! left-auto! transform-none! -translate-y-1/2! rounded-md! border-none! bg-transparent! shadow-none! hover:bg-muted! focus-visible:outline-2! focus-visible:outline-offset-2! focus-visible:outline-[var(--color-primary-strong)]! [&_svg]:size-4",
   actionButton:
     "h-11! min-h-11! px-4! text-base! font-semibold! rounded-md! focus-visible:outline-2! focus-visible:outline-offset-2! focus-visible:outline-[var(--color-primary-strong)]!",
   success: "border-l-[var(--color-success)] [&_[data-icon]]:text-[var(--color-success)]",

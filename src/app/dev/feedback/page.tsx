@@ -11,6 +11,8 @@ import { isDevPagesEnabled } from "@/lib/dev-pages";
 import { mockIndicatorValuesByQuality } from "@/mocks/quality-status";
 import { QUALITY_STATUSES } from "@/types/domain";
 
+import { FeedbackDemo } from "./feedback-demo";
+
 const kindTitles: Record<StatusKind, string> = {
   request: "Demandes",
   report: "Rapports",
@@ -36,13 +38,18 @@ export default function DevFeedbackPage() {
     >
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-extrabold text-[color:var(--color-primary-strong)]">
-          Catalogue retours — G3
+          Catalogue retours et dialogues — G3
         </h1>
         <p className="text-base text-muted-foreground">
-          Page de démo masquée en production (sauf ENABLE_DEV_PAGES). Les 19 statuts en tailles
-          standard et compacte, la référence d&apos;erreur copiable et les 6 statuts de qualité d&apos;une valeur.
+          Page de démo masquée en production (sauf ENABLE_DEV_PAGES). Dialogues
+          et retours (G3.A : Banner, Modal, Drawer, Toast, Skeleton, EmptyState,
+          ConfirmDialog), les 19 statuts en tailles standard et compacte, la
+          référence d&apos;erreur copiable et les 6 statuts de qualité
+          d&apos;une valeur.
         </p>
       </header>
+
+      <FeedbackDemo />
 
       <section className="flex flex-col gap-4" aria-labelledby="status-title">
         <h2
