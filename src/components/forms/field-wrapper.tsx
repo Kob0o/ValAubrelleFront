@@ -41,6 +41,11 @@ export type FieldWrapperProps = {
   required?: boolean;
   /** Texte affiché sous le champ et lu avec lui (compteur de caractères…). */
   footer?: string;
+  /**
+   * Contenu structuré affiché sous le champ et lu avec lui (règles du mot de
+   * passe…). Relié au contrôle par `aria-describedby`.
+   */
+  details?: ReactNode;
   /** Bouton placé à droite dans le champ (afficher le mot de passe…). */
   trailing?: ReactNode;
   className?: string;
@@ -67,6 +72,7 @@ export function FieldWrapper({
   error,
   required = false,
   footer,
+  details,
   trailing,
   className,
   children,
@@ -76,11 +82,14 @@ export function FieldWrapper({
   const hintId = `${controlId}-hint`;
   const errorId = `${controlId}-error`;
   const footerId = `${controlId}-footer`;
+  const detailsId = `${controlId}-details`;
 
-  const describedBy =
-    [hint && hintId, error && errorId, footer && footerId]
-      .filter(Boolean)
-      .join(" ") || undefined;
+  const describedBy = describedByIds(
+    hint && hintId,
+    error && errorId,
+    details ? detailsId : undefined,
+    footer && footerId,
+  );
 
   return (
     <div className={cn("flex flex-col gap-2", className)} data-slot="field">
@@ -123,6 +132,8 @@ export function FieldWrapper({
 
       {error ? <FieldErrorMessage id={errorId}>{error}</FieldErrorMessage> : null}
 
+      {details ? <div id={detailsId}>{details}</div> : null}
+
       {footer ? (
         <p id={footerId} className="text-base text-muted-foreground">
           {footer}
@@ -132,13 +143,45 @@ export function FieldWrapper({
   );
 }
 
+/** Assemble une valeur `aria-describedby` en ignorant les identifiants absents. */
+export function describedByIds(
+  ...ids: Array<string | false | null | undefined>
+): string | undefined {
+  return ids.filter(Boolean).join(" ") || undefined;
+}
+
+/**
+ * Message d'erreur d'un champ ou d'un groupe : icône Lucide + texte, préfixe
+ * « Erreur : » pour les lecteurs d'écran. Jamais la couleur seule.
+ */
+export function FieldErrorMessage({
+  id,
+  children,
+}: {
+  id: string;
+  children: ReactNode;
+}) {
+  return (
+    <p id={id} className="flex items-start gap-2 text-base text-destructive">
+      {/* Case de la hauteur d'une ligne : l'icône reste alignée sur la 1re ligne. */}
+      <span className="flex h-[1lh] shrink-0 items-center">
+        <CircleAlert aria-hidden="true" className="size-4" />
+      </span>
+      <span>
+        <span className="sr-only">Erreur : </span>
+        {children}
+      </span>
+    </p>
+  );
+}
+
 /**
  * Icône d'information à côté du libellé, hors du `<label>` pour ne pas entrer
  * dans le nom du champ. Icône 16 px dans une case de 24 px, zone cliquable
  * étendue à 44 × 44 px. L'aide s'affiche au survol, au focus clavier et au
  * toucher (clic), se ferme avec Échap ou en cliquant ailleurs.
  */
-function FieldHint({ label, hint }: { label: string; hint: string }) {
+export function FieldHint({ label, hint }: { label: string; hint: string }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -163,24 +206,5 @@ function FieldHint({ label, hint }: { label: string; hint: string }) {
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  );
-}
-
-/**
- * Message d'erreur : icône + texte + préfixe « Erreur : » pour les lecteurs
- * d'écran. Partagé par les champs et les groupes (PeriodPicker…).
- */
-export function FieldErrorMessage({ id, children }: { id: string; children: ReactNode }) {
-  return (
-    <p id={id} className="flex items-start gap-2 text-base text-destructive">
-      {/* Case de la hauteur d'une ligne : l'icône reste alignée sur la 1re ligne. */}
-      <span className="flex h-[1lh] shrink-0 items-center">
-        <CircleAlert aria-hidden="true" className="size-4" />
-      </span>
-      <span>
-        <span className="sr-only">Erreur : </span>
-        {children}
-      </span>
-    </p>
   );
 }

@@ -22,6 +22,8 @@ describe("contraste des champs de formulaire (variables du thème)", () => {
     ["badge « Obligatoire » (--secondary-foreground) sur --secondary", "--secondary-foreground", "--secondary"],
     ["infobulle d'aide (--background) sur --foreground", "--background", "--foreground"],
     ["icône d'aide et œil (--muted-foreground) sur --muted", "--muted-foreground", "--muted"],
+    // G2.A : règles du mot de passe
+    ["règle respectée (--color-success) sur --background", "--color-success", "--background"],
   ])("%s atteint 4,5:1", (_name, foreground, background) => {
     expect(contrastRatio(v(foreground), v(background))).toBeGreaterThanOrEqual(
       TEXT_CONTRAST_MINIMUM,
@@ -34,6 +36,13 @@ describe("contraste des champs de formulaire (variables du thème)", () => {
     ["anneau de focus (--ring) sur --background", "--ring", "--background"],
     ["contour de l'option active (--primary) sur --accent", "--primary", "--accent"],
     ["bordure d'erreur (--destructive) sur --background", "--destructive", "--background"],
+    // G2.A : cases, radios, interrupteur
+    ["case / radio cochée (--primary) sur --background", "--primary", "--background"],
+    ["coche blanche (--primary-foreground) sur case cochée --primary", "--primary-foreground", "--primary"],
+    ["rail d'interrupteur désactivé (--input) sur --background", "--input", "--background"],
+    ["pastille (--background) sur rail désactivé --input", "--background", "--input"],
+    ["pastille (--background) sur rail activé --primary", "--background", "--primary"],
+    ["contrôle désactivé (--muted-foreground) sur --muted", "--muted-foreground", "--muted"],
   ])("%s atteint 3:1", (_name, foreground, background) => {
     expect(contrastRatio(v(foreground), v(background))).toBeGreaterThanOrEqual(
       UI_CONTRAST_MINIMUM,
