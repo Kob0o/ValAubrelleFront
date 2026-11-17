@@ -2,8 +2,11 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
 
-// Sans `globals: true`, Testing Library ne démonte pas les rendus entre deux tests.
-afterEach(() => cleanup());
+// globals: false dans vitest.config.ts → le cleanup automatique de
+// Testing Library n'est pas actif, on le déclare explicitement.
+afterEach(() => {
+  cleanup();
+});
 
 // jsdom n'implémente pas ces API utilisées par Radix (Select, Popover) et cmdk.
 if (typeof window !== "undefined") {
