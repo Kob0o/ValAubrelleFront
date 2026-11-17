@@ -156,9 +156,7 @@ export function ReportsDemo() {
                 await api.updateSection(mockReportDraft.id, sectionId, input);
                 await reload();
               }}
-              onReload={() => {
-                void reload().then(() => setActiveId(null));
-              }}
+              onReload={() => void reload()}
             />
           ) : (
             <SectionEditor

@@ -16,11 +16,12 @@ import {
   normalizeError,
   type NormalizedApiError,
 } from "@/lib/api/errors";
-import type { CreateSectionInput } from "@/lib/api/reports";
+import {
+  SECTION_TITLE_MAX_LENGTH,
+  type CreateSectionInput,
+} from "@/lib/api/reports";
 import type { Decision, Section } from "@/types/domain";
 
-/** maxLength du titre dans createManualReportSection (contrat OpenAPI). */
-export const TITLE_MAX_LENGTH = 200;
 
 export type SectionEditorInitial = Required<
   Pick<Section, "id" | "title" | "text" | "version">
@@ -62,8 +63,8 @@ function validate(
   const errors: FieldErrors = {};
   if (!initial) {
     if (!title.trim()) errors.title = "Saisissez un titre.";
-    else if (title.trim().length > TITLE_MAX_LENGTH)
-      errors.title = `Le titre ne doit pas dépasser ${TITLE_MAX_LENGTH} caractères.`;
+    else if (title.trim().length > SECTION_TITLE_MAX_LENGTH)
+      errors.title = `Le titre ne doit pas dépasser ${SECTION_TITLE_MAX_LENGTH} caractères.`;
   }
   if (!text.trim()) errors.text = "Saisissez le texte de la section.";
   else if (initial && text === initial.text)
@@ -90,6 +91,8 @@ export function SectionEditor(props: SectionEditorProps) {
   const [text, setText] = useState(initial?.text ?? "");
   const [showErrors, setShowErrors] = useState(false);
   const [success, setSuccess] = useState("");
+  /** Version envoyée lors du dernier enregistrement (détection d'un rechargement après 409). */
+  const [submittedVersion, setSubmittedVersion] = useState<number>();
   const titleRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
@@ -112,6 +115,20 @@ export function SectionEditor(props: SectionEditorProps) {
   };
   const correlationId =
     error && isServerError(error) ? error.correlationId : undefined;
+  /**
+   * Après un 409, « Recharger la section » fournit une `initial.version` plus
+   * récente : le conflit est résolu côté données, la saisie reste en place et
+   * le prochain enregistrement part avec la nouvelle version.
+   */
+  const reloadedAfterConflict =
+    error !== null &&
+    isVersionConflict(error) &&
+    initial !== undefined &&
+    submittedVersion !== undefined &&
+    initial.version !== submittedVersion;
+  const statusMessage = reloadedAfterConflict
+    ? "Dernière version rechargée. Votre texte est conservé : enregistrez pour remplacer la version actuelle."
+    : success;
 
   function handleChange(update: () => void) {
     update();
@@ -129,6 +146,7 @@ export function SectionEditor(props: SectionEditorProps) {
     if (errors.title) return titleRef.current?.focus();
     if (errors.text) return textRef.current?.focus();
 
+    if (initial) setSubmittedVersion(initial.version);
     const outcome = await submit();
     if (!outcome.ok) return; // erreur : saisie conservée
 
@@ -156,7 +174,7 @@ export function SectionEditor(props: SectionEditorProps) {
         name="title"
         required={!isEdit}
         readOnly={isEdit}
-        maxLength={TITLE_MAX_LENGTH}
+        maxLength={SECTION_TITLE_MAX_LENGTH}
         hint={
           isEdit
             ? "Le titre d'une section existante n'est pas modifiable."
@@ -178,7 +196,7 @@ export function SectionEditor(props: SectionEditorProps) {
         onChange={(value) => handleChange(() => setText(value))}
       />
 
-      {error ? (
+      {error && !reloadedAfterConflict ? (
         <div
           role="alert"
           className="flex flex-col gap-2 rounded-[var(--radius)] border-2 border-[var(--color-danger)] px-3 py-2 text-base text-[var(--color-danger)]"
@@ -198,8 +216,15 @@ export function SectionEditor(props: SectionEditorProps) {
         </div>
       ) : null}
 
-      <p role="status" className="text-base text-[var(--color-success)]">
-        {success}
+      <p
+        role="status"
+        className={
+          reloadedAfterConflict
+            ? "text-base text-[var(--color-info)]"
+            : "text-base text-[var(--color-success)]"
+        }
+      >
+        {statusMessage}
       </p>
 
       <div>

@@ -1,10 +1,8 @@
 import { buildApiError } from "@/lib/api/errors";
-import type { ReportsApi } from "@/lib/api/reports";
+import { SECTION_TITLE_MAX_LENGTH, type ReportsApi } from "@/lib/api/reports";
 import { mockReportDraft } from "@/mocks/report-draft";
 import type { ReportDraft } from "@/types/domain";
 
-/** Contraintes du contrat sur createManualReportSection. */
-const TITLE_MAX_LENGTH = 200;
 
 type MockOptions = {
   initial?: ReportDraft;
@@ -50,8 +48,8 @@ export function createMockReportsApi({
 
       const fields: Record<string, string> = {};
       if (!input.title.trim()) fields.title = "Le titre est obligatoire.";
-      else if (input.title.length > TITLE_MAX_LENGTH)
-        fields.title = `Le titre ne doit pas dépasser ${TITLE_MAX_LENGTH} caractères.`;
+      else if (input.title.length > SECTION_TITLE_MAX_LENGTH)
+        fields.title = `Le titre ne doit pas dépasser ${SECTION_TITLE_MAX_LENGTH} caractères.`;
       if (!input.text.trim()) fields.text = "Le texte est obligatoire.";
       if (Object.keys(fields).length > 0) {
         throw buildApiError({

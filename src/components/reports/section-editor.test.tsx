@@ -237,4 +237,46 @@ describe("SectionEditor — édition", () => {
     fireEvent.click(screen.getByRole("button", { name: "Recharger la section" }));
     expect(onReload).toHaveBeenCalledOnce();
   });
+
+  it("garde le texte après « Recharger la section » et réenregistre avec la nouvelle version", async () => {
+    const api = createMockReportsApi();
+    const stale = { ...section, version: section.version - 1 };
+    const onUpdate = vi.fn((id: string, input: Parameters<typeof api.updateSection>[2]) =>
+      api.updateSection(draftId, id, input),
+    );
+    const { rerender } = render(
+      <SectionEditor key={section.id} initial={stale} onUpdate={onUpdate} onReload={() => {}} />,
+    );
+    fireEvent.change(screen.getByLabelText("Texte"), {
+      target: { value: "Ma version" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Enregistrer les modifications" }),
+    );
+    await screen.findByRole("alert");
+
+    // Le parent recharge la section : même clé, version à jour.
+    rerender(
+      <SectionEditor key={section.id} initial={section} onUpdate={onUpdate} onReload={() => {}} />,
+    );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Dernière version rechargée",
+    );
+    expect(screen.getByLabelText("Texte")).toHaveValue("Ma version");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Enregistrer les modifications" }),
+    );
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Modifications enregistrées.",
+      ),
+    );
+    expect(onUpdate).toHaveBeenLastCalledWith(section.id, {
+      status: "edited",
+      editedText: "Ma version",
+      version: section.version,
+    });
+  });
 });

@@ -5,6 +5,9 @@ type JsonBody<T> = T extends { content: { "application/json": infer B } }
   ? B
   : never;
 
+/** maxLength du titre dans createManualReportSection (contrat OpenAPI). */
+export const SECTION_TITLE_MAX_LENGTH = 200;
+
 /** POST /reports/drafts/{reportId}/sections (createManualReportSection). */
 export type CreateSectionInput = JsonBody<
   operations["createManualReportSection"]["requestBody"]
