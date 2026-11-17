@@ -6,6 +6,7 @@ import {
   statusLabelsByKind,
   type StatusKind,
 } from "@/components/shared/status-badge.config";
+import { isDevPagesEnabled } from "@/lib/dev-pages";
 
 const kindTitles: Record<StatusKind, string> = {
   request: "Demandes",
@@ -21,7 +22,7 @@ const kinds = Object.keys(kindTitles) as StatusKind[];
 const DEMO_CORRELATION_ID = "3f2b8c1e-9a4d-4e7b-8c21-5d6f0a1b2c3d";
 
 export default function DevFeedbackPage() {
-  if (process.env.NODE_ENV === "production") {
+  if (!isDevPagesEnabled()) {
     notFound();
   }
 
@@ -35,7 +36,7 @@ export default function DevFeedbackPage() {
           Catalogue retours — G3
         </h1>
         <p className="text-base text-muted-foreground">
-          Page de démo masquée en production. Les 19 statuts en tailles
+          Page de démo masquée en production (sauf ENABLE_DEV_PAGES). Les 19 statuts en tailles
           standard et compacte, puis la référence d&apos;erreur copiable.
         </p>
       </header>

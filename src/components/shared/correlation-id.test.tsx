@@ -2,6 +2,7 @@ import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { CorrelationId } from "@/components/shared/correlation-id";
+import { axeViolations } from "@/test/axe";
 
 const ID = "3f2b8c1e-9a4d-4e7b-8c21-5d6f0a1b2c3d";
 
@@ -31,6 +32,11 @@ describe("CorrelationId", () => {
     const code = screen.getByText(ID);
     expect(code.tagName).toBe("CODE");
     expect(code).toHaveClass("font-mono", "select-all", "break-all");
+  });
+
+  it("ne présente aucune violation axe", async () => {
+    const { container } = render(<CorrelationId id={ID} />);
+    expect(await axeViolations(container)).toEqual([]);
   });
 
   it("accepte un libellé personnalisé", () => {

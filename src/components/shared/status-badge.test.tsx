@@ -10,6 +10,7 @@ import {
 } from "@/components/shared/status-badge.config";
 import { charter } from "@/theme/tokens";
 import { contrastRatio, TEXT_CONTRAST_MINIMUM } from "@/theme/contrast";
+import { axeViolations } from "@/test/axe";
 
 const kinds = Object.keys(statusVisuals) as StatusKind[];
 const allPairs = kinds.flatMap((kind) =>
@@ -89,6 +90,17 @@ describe("StatusBadge", () => {
 
     rerender(<StatusBadge kind="account" status="active" />);
     expect(container.firstChild).toHaveClass("text-base", "font-semibold");
+  });
+
+  it("ne présente aucune violation axe sur les 19 statuts", async () => {
+    const { container } = render(
+      <div>
+        {allPairs.map(({ kind, status }) => (
+          <StatusBadge key={`${kind}-${status}`} {...({ kind, status } as StatusBadgeProps)} />
+        ))}
+      </div>,
+    );
+    expect(await axeViolations(container)).toEqual([]);
   });
 
   it.each(Object.entries(toneColors))(
