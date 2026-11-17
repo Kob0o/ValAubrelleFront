@@ -270,39 +270,11 @@ function MultiSelectControl({
     });
   }
 
+  const chipClassName =
+    "h-6 min-h-6 normal-case tracking-normal gap-0.5 py-0 pl-2 pr-0.5";
+
   return (
     <div className="flex flex-col gap-2">
-      {selectedOptions.length > 0 ? (
-        <ul className="flex flex-wrap gap-2" aria-label="Sélection actuelle">
-          {visibleChips.map((option) => (
-            <li key={option.value}>
-              <Badge
-                variant="secondary"
-                className="normal-case tracking-normal gap-1 pr-1"
-              >
-                <span>{option.label}</span>
-                <button
-                  type="button"
-                  aria-label={`Retirer ${option.label}`}
-                  disabled={disabled}
-                  onClick={() => remove(option.value)}
-                  className="relative flex size-6 items-center justify-center rounded-sm text-muted-foreground outline-none after:absolute after:-inset-2.5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
-                >
-                  <X aria-hidden="true" className="size-3.5" />
-                </button>
-              </Badge>
-            </li>
-          ))}
-          {hiddenCount > 0 ? (
-            <li>
-              <Badge variant="outline" className="normal-case tracking-normal">
-                + {hiddenCount} autres
-              </Badge>
-            </li>
-          ) : null}
-        </ul>
-      ) : null}
-
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <button
@@ -402,6 +374,34 @@ function MultiSelectControl({
           </Command>
         </PopoverContent>
       </Popover>
+
+      {selectedOptions.length > 0 ? (
+        <ul className="flex flex-wrap gap-2" aria-label="Sélection actuelle">
+          {visibleChips.map((option) => (
+            <li key={option.value}>
+              <Badge variant="secondary" className={chipClassName}>
+                <span>{option.label}</span>
+                <button
+                  type="button"
+                  aria-label={`Retirer ${option.label}`}
+                  disabled={disabled}
+                  onClick={() => remove(option.value)}
+                  className="relative flex items-center justify-center rounded-sm pt-0.5 pr-0.5 pb-0.5 text-muted-foreground outline-none after:absolute after:-inset-2.5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
+                >
+                  <X aria-hidden="true" className="size-2.5" />
+                </button>
+              </Badge>
+            </li>
+          ))}
+          {hiddenCount > 0 ? (
+            <li>
+              <Badge variant="outline" className={cn(chipClassName, "pr-2")}>
+                + {hiddenCount} autres
+              </Badge>
+            </li>
+          ) : null}
+        </ul>
+      ) : null}
 
       <p id={liveId} className="sr-only" aria-live="polite">
         {liveMessage}
