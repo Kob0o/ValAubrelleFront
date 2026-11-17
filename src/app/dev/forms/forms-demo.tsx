@@ -4,16 +4,14 @@ import { useState, type ReactNode } from "react";
 
 import { Checkbox, type CheckboxState } from "@/components/forms/checkbox";
 import { getFieldError } from "@/components/forms/field-error";
-import {
-  PasswordField,
-  type PasswordRule,
-} from "@/components/forms/password-field";
+import { PasswordField } from "@/components/forms/password-field";
 import { Radio, RadioGroup } from "@/components/forms/radio-group";
 import { SelectField, type SelectOption } from "@/components/forms/select-field";
 import { TextArea } from "@/components/forms/text-area";
 import { TextField } from "@/components/forms/text-field";
 import { Toggle } from "@/components/forms/toggle";
 import { Button } from "@/components/ui/button";
+import { applyFailedRules, evaluatePasswordRules } from "@/lib/auth/password-rules";
 import { mockMunicipalities } from "@/mocks";
 import type { ApiError } from "@/types/domain";
 import { ROLES, roleLabels } from "@/types/roles";
@@ -40,21 +38,8 @@ const validationError: ApiError = {
   },
 };
 
-/**
- * Règles fictives de démonstration : la liste réelle et ses identifiants ne
- * sont pas encore dans le contrat (seul `failedRules` l'est, à demander au back).
- */
-function demoPasswordRules(value: string): PasswordRule[] {
-  return [
-    { id: "length", label: "12 caractères minimum", met: value.length >= 12 },
-    { id: "digit", label: "Au moins un chiffre", met: /\d/.test(value) },
-    {
-      id: "case",
-      label: "Au moins une majuscule et une minuscule",
-      met: /[a-z]/.test(value) && /[A-Z]/.test(value),
-    },
-  ];
-}
+/** Réponse 422 simulée de `POST /auth/password-reset/confirm`. */
+const DEMO_FAILED_RULES = ["min_length", "uppercase", "digit", "special"];
 
 /** 4 000 caractères : limite de `text` sur `POST /requests/{id}/details-reply`. */
 const DETAILS_REPLY_MAX_LENGTH = 4000;
@@ -319,8 +304,8 @@ export function FormsDemo() {
           autoComplete="new-password"
           value={newPassword}
           onChange={setNewPassword}
-          rules={demoPasswordRules(newPassword)}
-          hint="Règles fictives de démonstration."
+          rules={evaluatePasswordRules(newPassword)}
+          hint="Règles par défaut (recommandation CNIL), en attendant celles du back."
         />
         <PasswordField
           label="Nouveau mot de passe (règles satisfaites)"
@@ -328,7 +313,7 @@ export function FormsDemo() {
           autoComplete="new-password"
           value={validPassword}
           onChange={setValidPassword}
-          rules={demoPasswordRules(validPassword)}
+          rules={evaluatePasswordRules(validPassword)}
         />
         <PasswordField
           label="Nouveau mot de passe (erreur 422)"
@@ -336,8 +321,12 @@ export function FormsDemo() {
           autoComplete="new-password"
           value={errorPassword}
           onChange={setErrorPassword}
-          rules={demoPasswordRules(errorPassword)}
+          rules={applyFailedRules(
+            evaluatePasswordRules(errorPassword),
+            DEMO_FAILED_RULES,
+          )}
           error="Le mot de passe ne respecte pas toutes les règles."
+          hint="Simulation : règles renvoyées en échec par le serveur (failedRules)."
         />
         <PasswordField
           label="Mot de passe (désactivé)"

@@ -7,13 +7,9 @@ import { cn } from "cn";
 import { FieldWrapper } from "@/components/forms/field-wrapper";
 import { IconButton } from "@/components/shared/icon-button";
 import { Input } from "@/components/ui/input";
+import type { PasswordRule } from "@/lib/auth/password-rules";
 
-/** Règle du mot de passe ; `met` vient du contrôle local ou de `failedRules` (422). */
-export type PasswordRule = {
-  id: string;
-  label: string;
-  met: boolean;
-};
+export type { PasswordRule };
 
 type NativeInputProps = Omit<
   ComponentProps<"input">,
