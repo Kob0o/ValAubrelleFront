@@ -61,7 +61,8 @@ export function counterAnnouncement(length: number, maxLength: number): string {
     return "";
   }
   // Arrondi au palier supérieur : le message ne change que tous les 10 caractères.
-  const step = Math.ceil(remaining / 10) * 10;
+  // Le palier ne dépasse jamais la limite (maxLength inférieur à 20).
+  const step = Math.min(Math.ceil(remaining / 10) * 10, maxLength);
   return `Au plus ${numberFormat.format(step)} caractères restants.`;
 }
 

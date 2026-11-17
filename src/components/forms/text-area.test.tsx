@@ -104,6 +104,10 @@ describe("TextArea", () => {
     // Il reste exactement 10 caractères : « au plus 10 », pas « moins de 10 ».
     expect(counterAnnouncement(3990, 4000)).toBe("Au plus 10 caractères restants.");
     expect(counterAnnouncement(3991, 4000)).toBe("Au plus 10 caractères restants.");
+    // Petite limite : le palier ne dépasse jamais maxLength.
+    expect(counterAnnouncement(0, 15)).toBe("Au plus 15 caractères restants.");
+    expect(counterAnnouncement(4, 15)).toBe("Au plus 15 caractères restants.");
+    expect(counterAnnouncement(5, 15)).toBe("Au plus 10 caractères restants.");
     expect(counterAnnouncement(3000, 4000)).toBe("");
     expect(counterAnnouncement(3600, 4000)).toBe(
       `Au plus 400 caractères restants.`,
