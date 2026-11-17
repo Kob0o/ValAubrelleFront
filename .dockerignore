@@ -1,0 +1,17 @@
+node_modules
+.next/cache
+out
+build
+coverage
+.git
+.gitignore
+.idea
+.serena
+.vscode
+.env*
+npm-debug.log*
+*.tsbuildinfo
+Dockerfile
+.dockerignore
+README.md
+AGENTS.md
