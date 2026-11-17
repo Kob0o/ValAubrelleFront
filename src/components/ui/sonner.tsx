@@ -36,9 +36,19 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--border-radius": "var(--radius)",
         } as React.CSSProperties
       }
+      containerAriaLabel="Notifications"
       toastOptions={{
+        closeButtonAriaLabel: "Fermer la notification",
+        // Couleurs d'état de la charte (tokens) : bordure et icône seulement,
+        // le texte reste anthracite ; l'icône et le libellé portent le sens.
         classNames: {
-          toast: "cn-toast",
+          toast: "cn-toast border-l-4",
+          title: "text-base font-semibold",
+          description: "text-base text-muted-foreground",
+          success: "border-l-[var(--color-success)] [&_[data-icon]]:text-[var(--color-success)]",
+          info: "border-l-[var(--color-info)] [&_[data-icon]]:text-[var(--color-info)]",
+          warning: "border-l-[var(--color-warning)] [&_[data-icon]]:text-[var(--color-warning)]",
+          error: "border-l-[var(--color-danger)] [&_[data-icon]]:text-[var(--color-danger)]",
         },
       }}
       {...props}
