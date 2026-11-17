@@ -75,7 +75,7 @@ export function Banner({
     <div
       role={role}
       className={cn(
-        "flex items-start gap-3 rounded-lg border border-l-4 bg-card px-4 py-3",
+        "flex items-start gap-3 rounded-lg border bg-card px-4 py-3",
         tone.border,
         className,
       )}
@@ -92,7 +92,11 @@ export function Banner({
         {action ? <div className="mt-1">{action}</div> : null}
       </div>
       {onClose ? (
-        <IconButton label="Fermer" onClick={onClose} className="-m-1.5 shrink-0">
+        <IconButton
+          label="Fermer"
+          onClick={onClose}
+          className="-mt-1 -mr-2 shrink-0"
+        >
           <X aria-hidden="true" className="size-4" />
         </IconButton>
       ) : null}
