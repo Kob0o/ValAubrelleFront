@@ -8,44 +8,47 @@ import {
   type DataTableColumn,
   type SortState,
 } from "@/components/shared/data-table";
-import {
-  municipalities,
-  type MunicipalityFixture,
-} from "@/mocks/municipalities";
+import { mockMunicipalities } from "@/mocks/municipalities";
+import { mockIndicatorValues } from "@/mocks/quality-status";
+import type { IndicatorValue } from "@/types/domain";
 
-const columns: DataTableColumn<MunicipalityFixture>[] = [
+const nameByCode = new Map<string, string>(
+  mockMunicipalities.map((municipality) => [municipality.code, municipality.name]),
+);
+
+function communeLabel(placeId: string): string {
+  return nameByCode.get(placeId) ?? placeId;
+}
+
+const columns: DataTableColumn<IndicatorValue>[] = [
   {
-    accessorKey: "name",
-    header: "Nom",
-    meta: { sortable: true, sortField: "name" },
-  },
-  { accessorKey: "inseeCode", header: "Code INSEE" },
-  {
-    accessorKey: "population",
-    header: "Population",
-    meta: { numeric: true, sortable: true, sortField: "population" },
-    cell: (info) => Number(info.getValue()).toLocaleString("fr-FR"),
-  },
-  {
-    accessorKey: "qualityScore",
-    header: "Score qualité",
-    meta: { numeric: true, sortable: true, sortField: "qualityScore" },
+    id: "commune",
+    accessorFn: (row) => communeLabel(row.placeId),
+    header: "Commune",
+    meta: { sortable: true, sortField: "commune" },
   },
   {
-    accessorKey: "openRequests",
-    header: "Demandes",
+    accessorKey: "value",
+    header: "Prix au m²",
+    meta: { numeric: true, sortable: true, sortField: "value" },
+    cell: (info) => `${Number(info.getValue()).toLocaleString("fr-FR")} €/m²`,
+  },
+  {
+    accessorKey: "sampleSize",
+    header: "Échantillon",
     meta: { numeric: true },
   },
+  { accessorKey: "status", header: "Statut qualité" },
 ];
 
 /**
- * Démo du DataTable (lot G0) avec les fixtures de src/mocks/.
+ * Démo du DataTable (lot G0) sur les fixtures officielles de src/mocks/.
  * Le tri est rejoué côté client UNIQUEMENT pour simuler la réponse du
- * serveur : en production, le parent renvoie la chaîne sort à l'API.
+ * serveur : en production, le parent envoie la chaîne sort à l'API.
  */
 export function DataTableDemo() {
   const [sort, setSort] = useState<SortState | null>({
-    field: "name",
+    field: "commune",
     direction: "asc",
   });
   const [selectedId, setSelectedId] = useState<string | number | null>(null);
@@ -53,15 +56,26 @@ export function DataTableDemo() {
 
   const sortedRows = useMemo(() => {
     if (!sort) {
-      return municipalities;
+      return mockIndicatorValues;
     }
-    const key = sort.field as keyof MunicipalityFixture;
-    return [...municipalities].sort((a, b) => {
-      const left = a[key];
-      const right = b[key];
+    const sortValue = (row: IndicatorValue): string | number | null =>
+      sort.field === "commune"
+        ? communeLabel(row.placeId)
+        : (row[sort.field as keyof IndicatorValue] as string | number | null);
+
+    return [...mockIndicatorValues].sort((a, b) => {
+      const left = sortValue(a);
+      const right = sortValue(b);
       if (left === null || left === undefined) return 1;
       if (right === null || right === undefined) return -1;
-      const order = left < right ? -1 : left > right ? 1 : 0;
+      const order =
+        typeof left === "string" && typeof right === "string"
+          ? left.localeCompare(right, "fr")
+          : left < right
+            ? -1
+            : left > right
+              ? 1
+              : 0;
       return sort.direction === "asc" ? order : -order;
     });
   }, [sort]);
@@ -76,23 +90,28 @@ export function DataTableDemo() {
           Données — tri et sélection interactifs
         </h2>
         <p className="text-base text-[var(--color-text)]">
-          Cliquez sur un en-tête triable : le parent reçoit la chaîne du
-          contrat et renvoie les lignes triées (simulation). Cliquez sur une
+          Prix au m² 2024 par commune (fixtures fictives, une par statut
+          qualité). Cliquez sur un en-tête triable : le parent reçoit la
+          chaîne du contrat et renvoie les lignes triées. Cliquez sur une
           ligne pour la sélectionner — Entrée et Espace fonctionnent aussi.
         </p>
         <DataTable
           columns={columns}
           rows={sortedRows}
-          caption="Communes du Val d'Aubrelle — population, score qualité et demandes en cours"
+          caption="Prix au m² 2024 par commune, un exemple par statut qualité — source fictive DVF, données de démonstration"
           sort={sort}
           onSortChange={(value) => setSort(parseSortString(value))}
           onRowClick={(row) => {
-            setSelectedId(row.id);
-            setLastClick(row.name);
+            setSelectedId(row.placeId);
+            setLastClick(communeLabel(row.placeId));
           }}
           selectedId={selectedId}
+          getRowId={(row) => row.placeId}
         />
-        <p className="text-sm text-[var(--color-text-muted)]" aria-live="polite">
+        <p
+          className="text-sm text-[var(--color-text-muted)]"
+          aria-live="polite"
+        >
           Chaîne sort émise :{" "}
           <code className="font-semibold">
             {sort ? `${sort.field},${sort.direction}` : "aucune"}
@@ -101,7 +120,10 @@ export function DataTableDemo() {
         </p>
       </section>
 
-      <section aria-labelledby="demo-chargement" className="flex flex-col gap-3">
+      <section
+        aria-labelledby="demo-chargement"
+        className="flex flex-col gap-3"
+      >
         <h2
           id="demo-chargement"
           className="text-2xl font-semibold text-[var(--color-primary-strong)]"
@@ -111,7 +133,7 @@ export function DataTableDemo() {
         <DataTable
           columns={columns}
           rows={[]}
-          caption="Communes du Val d'Aubrelle — chargement en cours"
+          caption="Prix au m² 2024 par commune — chargement en cours"
           loading
         />
       </section>
@@ -126,7 +148,7 @@ export function DataTableDemo() {
         <DataTable
           columns={columns}
           rows={[]}
-          caption="Communes du Val d'Aubrelle — aucun résultat"
+          caption="Prix au m² 2024 par commune — aucun résultat"
         />
       </section>
 
@@ -140,8 +162,8 @@ export function DataTableDemo() {
         <DataTable
           columns={columns}
           rows={[]}
-          caption="Communes du Val d'Aubrelle — erreur de chargement"
-          error="Impossible de charger les communes. Vérifiez votre connexion puis réessayez."
+          caption="Prix au m² 2024 par commune — erreur de chargement"
+          error="Impossible de charger les indicateurs. Vérifiez votre connexion puis réessayez."
         />
       </section>
     </div>
