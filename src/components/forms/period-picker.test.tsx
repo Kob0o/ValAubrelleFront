@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -56,6 +56,43 @@ describe("PeriodPicker", () => {
     );
     expect(screen.getByRole("combobox", { name: "Année de début" })).toHaveTextContent("2024");
     expect(screen.getByRole("combobox", { name: "Année de fin" })).toHaveTextContent("2019");
+  });
+
+  it("annonce l'erreur de groupe produite par un changement d'année (RGAA 7.5)", async () => {
+    const user = userEvent.setup();
+    render(<ControlledPeriod value={{ start: 2019, end: 2020 }} />);
+
+    const live = screen.getByRole("group", { name: "Période" }).querySelector("[aria-live]");
+    expect(live).toHaveAttribute("aria-live", "polite");
+    expect(live).toBeEmptyDOMElement();
+
+    const start = screen.getByRole("combobox", { name: "Année de début" });
+    start.focus();
+    await user.keyboard("{Enter}");
+    await user.click(await screen.findByRole("option", { name: "2024" }));
+
+    // Le message est inséré dans la région live déjà présente : il est annoncé.
+    await waitFor(() => expect(live).toHaveTextContent(INVERTED));
+  });
+
+  it("affiche l'erreur du parent en plus de l'erreur d'inversion", () => {
+    render(
+      <ControlledPeriod value={{ start: 2024, end: 2019 }} error="Choisissez une période." />,
+    );
+
+    expect(screen.getByRole("group", { name: "Période" })).toHaveAccessibleDescription(
+      `Erreur : ${INVERTED} Erreur : Choisissez une période.`,
+    );
+  });
+
+  it("affiche l'erreur du parent seule quand la période est valide", () => {
+    render(
+      <ControlledPeriod value={{ start: 2019, end: 2024 }} error="Choisissez une période." />,
+    );
+
+    expect(screen.getByRole("group", { name: "Période" })).toHaveAccessibleDescription(
+      "Erreur : Choisissez une période.",
+    );
   });
 
   it("autorise l'année unique par défaut et la refuse si demandé", () => {

@@ -21,7 +21,10 @@ export type PeriodPickerProps = {
   /** Début = fin autorisé (défaut : `true`). */
   allowSingleYear?: boolean;
   legend?: string;
-  /** Erreur du parent pour tout le groupe (ex. : « Choisissez une période » à l'envoi). */
+  /**
+   * Erreur du parent pour tout le groupe (ex. : « Choisissez une période » à
+   * l'envoi). Affichée en plus de l'erreur d'ordre ou d'année unique, jamais à sa place.
+   */
   error?: string;
   disabled?: boolean;
   id?: string;
@@ -63,11 +66,18 @@ export function PeriodPicker({
     !validation.ok && validation.code === "MISSING_BOUND" && validation.bound !== "both"
       ? validation.bound
       : undefined;
-  const groupError =
-    error ??
-    (!validation.ok && (validation.code === "INVERTED" || validation.code === "SINGLE_YEAR")
+  // Erreurs du groupe : celle de la validation (ordre, année unique) et celle
+  // du parent s'affichent toutes les deux, sans que l'une masque l'autre.
+  const validationError =
+    !validation.ok && (validation.code === "INVERTED" || validation.code === "SINGLE_YEAR")
       ? periodErrorMessage(validation, value)
-      : undefined);
+      : undefined;
+  const groupErrors = [
+    validationError ? { id: groupErrorId, message: validationError } : undefined,
+    error && error !== validationError
+      ? { id: `${groupId}-parent-error`, message: error }
+      : undefined,
+  ].filter((item) => item !== undefined);
   const missingMessage =
     !validation.ok && missing ? periodErrorMessage(validation, value) : undefined;
 
@@ -75,7 +85,7 @@ export function PeriodPicker({
     <fieldset
       id={groupId}
       aria-labelledby={legendId}
-      aria-describedby={groupError ? groupErrorId : undefined}
+      aria-describedby={groupErrors.map((item) => item.id).join(" ") || undefined}
       disabled={disabled}
       className={cn("flex min-w-0 flex-col gap-4", className)}
     >
@@ -108,9 +118,18 @@ export function PeriodPicker({
         />
       </div>
 
-      {groupError ? (
-        <FieldErrorMessage id={groupErrorId}>{groupError}</FieldErrorMessage>
-      ) : null}
+      {/*
+        RGAA 7.5 : région live toujours présente, pour que le lecteur d'écran
+        annonce l'erreur produite par un changement d'année. Vide, elle ne
+        prend pas de place (la marge négative annule l'espacement du groupe).
+      */}
+      <div aria-live="polite" className="-mt-4 flex flex-col gap-2 not-empty:mt-0">
+        {groupErrors.map((item) => (
+          <FieldErrorMessage key={item.id} id={item.id}>
+            {item.message}
+          </FieldErrorMessage>
+        ))}
+      </div>
     </fieldset>
   );
 }
