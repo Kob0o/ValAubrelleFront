@@ -16,8 +16,9 @@ import type { ReportDraft } from "@/types/domain";
 
 type SimulatedError = "none" | "server" | "unavailable" | "conflict";
 
-export function ReportsDemo() {
-  const baseApi = useMemo(() => createMockReportsApi({ latency: 600 }), []);
+/** `latency` : délai simulé des enregistrements (ms), 0 dans les tests. */
+export function ReportsDemo({ latency = 600 }: { latency?: number }) {
+  const baseApi = useMemo(() => createMockReportsApi(), []);
   const [simulated, setSimulated] = useState<SimulatedError>("none");
   const [draft, setDraft] = useState<ReportDraft | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -32,25 +33,35 @@ export function ReportsDemo() {
       if (simulated === "unavailable")
         throw buildApiError({ httpStatus: 503 });
     };
-    const failUpdate = () => {
-      if (simulated === "conflict") throw buildApiError({ httpStatus: 409 });
-      fail();
-    };
     return {
       ...baseApi,
       kind: baseApi.kind,
       async createSection(...args) {
-        await new Promise((resolve) => setTimeout(resolve, 600));
+        await new Promise((resolve) => setTimeout(resolve, latency));
         fail();
         return baseApi.createSection(...args);
       },
-      async updateSection(...args) {
-        await new Promise((resolve) => setTimeout(resolve, 600));
-        failUpdate();
-        return baseApi.updateSection(...args);
+      async updateSection(reportId, sectionId, input) {
+        await new Promise((resolve) => setTimeout(resolve, latency));
+        fail();
+        if (simulated === "conflict") {
+          // Une autre personne enregistre la section juste avant : la version
+          // avance dans le mock, qui renvoie alors un vrai 409 VERSION_CONFLICT.
+          // « Recharger la section » récupère ensuite cette nouvelle version.
+          const current = (await baseApi.getDraft(reportId)).sections?.find(
+            (section) => section.id === sectionId,
+          );
+          if (current?.status && current.version !== undefined) {
+            await baseApi.updateSection(reportId, sectionId, {
+              status: current.status,
+              version: current.version,
+            });
+          }
+        }
+        return baseApi.updateSection(reportId, sectionId, input);
       },
     };
-  }, [baseApi, simulated]);
+  }, [baseApi, simulated, latency]);
 
   const reload = useCallback(async () => {
     setDraft(await baseApi.getDraft(mockReportDraft.id));
@@ -94,7 +105,7 @@ export function ReportsDemo() {
               ["none", "Succès"],
               ["server", "Erreur 500"],
               ["unavailable", "Service indisponible (503)"],
-              ["conflict", "Conflit de version (409, modification)"],
+              ["conflict", "Modification concurrente (409)"],
             ] as const
           ).map(([value, label]) => (
             <label key={value} className="flex min-h-11 items-center gap-2">
