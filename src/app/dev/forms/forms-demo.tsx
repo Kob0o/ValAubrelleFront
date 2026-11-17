@@ -34,6 +34,12 @@ const groupedCommunes: MultiSelectOption[] = mockMunicipalities.map(
   }),
 );
 
+function formatCommunesCount(count: number): string {
+  if (count === 0) return "Aucune commune sélectionnée";
+  if (count === 1) return "1 commune sélectionnée";
+  return `${count} communes sélectionnées`;
+}
+
 const roles: SelectOption[] = ROLES.map((role) => ({
   value: role,
   label: roleLabels[role],
@@ -276,6 +282,7 @@ export function FormsDemo() {
           onChange={setMultiEmpty}
           placeholder="Choisir des communes"
           hint="Recherche accent-insensible sur les 32 communes."
+          formatSelectionCount={formatCommunesCount}
         />
         <MultiSelect
           label="Communes (pastilles)"
@@ -283,6 +290,7 @@ export function FormsDemo() {
           value={multiFilled}
           onChange={setMultiFilled}
           hint="Au-delà de 3 pastilles, un compteur « + N autres » apparaît."
+          formatSelectionCount={formatCommunesCount}
         />
         <MultiSelect
           label="Communes (max 3)"
@@ -291,6 +299,7 @@ export function FormsDemo() {
           onChange={setMultiMax}
           max={3}
           hint="Les options restantes sont désactivées à la limite."
+          formatSelectionCount={formatCommunesCount}
         />
         <MultiSelect
           label="Communes groupées"
@@ -298,6 +307,7 @@ export function FormsDemo() {
           value={multiGrouped}
           onChange={setMultiGrouped}
           placeholder="Choisir par secteur"
+          formatSelectionCount={formatCommunesCount}
         />
         <MultiSelect
           label="Communes (erreur)"
@@ -306,6 +316,7 @@ export function FormsDemo() {
           onChange={setMultiError}
           required
           error="Choisissez au moins une commune."
+          formatSelectionCount={formatCommunesCount}
         />
         <MultiSelect
           label="Communes (désactivé)"
@@ -313,6 +324,7 @@ export function FormsDemo() {
           value={["59230", "59231"]}
           onChange={() => {}}
           disabled
+          formatSelectionCount={formatCommunesCount}
         />
       </DemoSection>
 

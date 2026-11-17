@@ -18,12 +18,19 @@ const options: MultiSelectOption[] = [
   { value: "beaurain", label: "Beaurain" },
 ];
 
+function formatCommunesCount(count: number): string {
+  if (count === 0) return "Aucune commune sélectionnée";
+  if (count === 1) return "1 commune sélectionnée";
+  return `${count} communes sélectionnées`;
+}
+
 function ControlledMultiSelect(props: Partial<MultiSelectProps>) {
   const [value, setValue] = useState(props.value ?? []);
   return (
     <MultiSelect
       label="Communes"
       options={options}
+      formatSelectionCount={formatCommunesCount}
       {...props}
       value={value}
       onChange={(next) => {
@@ -49,7 +56,7 @@ describe("MultiSelect", () => {
 
     await user.click(screen.getByRole("combobox", { name: "Communes" }));
     await user.click(await screen.findByRole("option", { name: "Aubrecourt" }));
-    await user.click(screen.getByRole("option", { name: "Écully" }));
+    await user.click(screen.getByRole("option", { name: /Écully/ }));
 
     expect(onChange).toHaveBeenLastCalledWith(["aubrecourt", "ecully"]);
 
@@ -72,7 +79,7 @@ describe("MultiSelect", () => {
     await user.click(search);
     await user.keyboard("ecully");
 
-    expect(screen.getByRole("option", { name: "Écully" })).toBeVisible();
+    expect(screen.getByRole("option", { name: /Écully/ })).toBeVisible();
     expect(
       screen.queryByRole("option", { name: "Aubrecourt" }),
     ).not.toBeInTheDocument();
@@ -112,7 +119,7 @@ describe("MultiSelect", () => {
     expect(onChange).toHaveBeenCalledWith(["aubrecourt"]);
   });
 
-  it("affiche + N autres au-delà de 3 pastilles", () => {
+  it("affiche + 1 autre au-delà de 3 pastilles", () => {
     render(
       <ControlledMultiSelect
         value={["aubrecourt", "ecully", "bellemont", "beaurain"]}
@@ -124,7 +131,7 @@ describe("MultiSelect", () => {
     expect(within(chips).getByText("Écully")).toBeVisible();
     expect(within(chips).getByText("Bellemont")).toBeVisible();
     expect(within(chips).queryByText("Beaurain")).not.toBeInTheDocument();
-    expect(within(chips).getByText("+ 1 autres")).toBeVisible();
+    expect(within(chips).getByText("+ 1 autre")).toBeVisible();
   });
 
   it("groupe les options", async () => {
@@ -143,6 +150,63 @@ describe("MultiSelect", () => {
     expect(screen.getByText("Sud")).toBeVisible();
   });
 
+  it("annonce correctement le nombre de communes sélectionnées", () => {
+    const { rerender } = render(
+      <MultiSelect
+        label="Communes"
+        options={options}
+        value={["ecully"]}
+        onChange={() => {}}
+        formatSelectionCount={formatCommunesCount}
+      />,
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "1 commune sélectionnée",
+    );
+
+    rerender(
+      <MultiSelect
+        label="Communes"
+        options={options}
+        value={["ecully", "aubrecourt", "bellemont"]}
+        onChange={() => {}}
+        formatSelectionCount={formatCommunesCount}
+      />,
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "3 communes sélectionnées",
+    );
+  });
+
+  it("expose aria-checked true/false selon la sélection réelle", async () => {
+    const user = userEvent.setup();
+    render(<ControlledMultiSelect value={["ecully"]} />);
+
+    await user.click(screen.getByRole("combobox", { name: "Communes" }));
+    const selected = await screen.findByRole("option", { name: /Écully/ });
+    const unselected = screen.getByRole("option", { name: "Aubrecourt" });
+
+    expect(selected).toHaveAttribute("aria-checked", "true");
+    expect(selected).toHaveTextContent(/sélectionnée/);
+    expect(unselected).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("n'a qu'une listbox (pas d'imbrication)", async () => {
+    const user = userEvent.setup();
+    render(<ControlledMultiSelect value={["ecully"]} />);
+
+    await user.click(screen.getByRole("combobox", { name: "Communes" }));
+    await screen.findByRole("option", { name: /Écully/ });
+
+    expect(screen.getAllByRole("listbox")).toHaveLength(1);
+    expect(screen.getByRole("listbox")).toHaveAttribute(
+      "aria-multiselectable",
+      "true",
+    );
+  });
+
   it("n'a pas de violation axe fermé", async () => {
     const { container } = render(
       <ControlledMultiSelect
@@ -157,13 +221,11 @@ describe("MultiSelect", () => {
 
   it("n'a pas de violation axe ouvert", async () => {
     const user = userEvent.setup();
-    const { container } = render(
-      <ControlledMultiSelect value={["ecully"]} />,
-    );
+    render(<ControlledMultiSelect value={["ecully"]} />);
 
     await user.click(screen.getByRole("combobox", { name: "Communes" }));
-    await screen.findByRole("option", { name: "Écully" });
+    await screen.findByRole("option", { name: /Écully/ });
 
-    expect(await axeViolations(container)).toEqual([]);
+    expect(await axeViolations(document.body)).toEqual([]);
   });
 });

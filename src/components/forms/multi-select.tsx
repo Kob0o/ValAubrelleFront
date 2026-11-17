@@ -52,10 +52,25 @@ export type MultiSelectProps = {
   required?: boolean;
   id?: string;
   className?: string;
+  itemLabelSingular?: string;
+  itemLabelPlural?: string;
+  formatSelectionCount?: (count: number) => string;
 };
 
 const DEFAULT_PLACEHOLDER = "Choisir des options";
+const DEFAULT_ITEM_SINGULAR = "élément";
+const DEFAULT_ITEM_PLURAL = "éléments";
 const MAX_VISIBLE_CHIPS = 3;
+
+function defaultFormatSelectionCount(
+  count: number,
+  singular: string,
+  plural: string,
+): string {
+  if (count === 0) return `Aucun ${singular} sélectionné`;
+  if (count === 1) return `1 ${singular} sélectionné`;
+  return `${count} ${plural} sélectionnés`;
+}
 
 function filterOptions(
   value: string,
@@ -99,6 +114,9 @@ export function MultiSelect({
   required = false,
   id,
   className,
+  itemLabelSingular = DEFAULT_ITEM_SINGULAR,
+  itemLabelPlural = DEFAULT_ITEM_PLURAL,
+  formatSelectionCount,
 }: MultiSelectProps) {
   return (
     <FieldWrapper
@@ -120,6 +138,9 @@ export function MultiSelect({
           searchable={searchable}
           max={max}
           disabled={disabled}
+          itemLabelSingular={itemLabelSingular}
+          itemLabelPlural={itemLabelPlural}
+          formatSelectionCount={formatSelectionCount}
         />
       )}
     </FieldWrapper>
@@ -136,6 +157,9 @@ type MultiSelectControlProps = {
   searchable: boolean;
   max?: number;
   disabled: boolean;
+  itemLabelSingular: string;
+  itemLabelPlural: string;
+  formatSelectionCount?: (count: number) => string;
 };
 
 function MultiSelectControl({
@@ -148,6 +172,9 @@ function MultiSelectControl({
   searchable,
   max,
   disabled,
+  itemLabelSingular,
+  itemLabelPlural,
+  formatSelectionCount,
 }: MultiSelectControlProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -174,13 +201,13 @@ function MultiSelectControl({
   const visibleChips = selectedOptions.slice(0, MAX_VISIBLE_CHIPS);
   const hiddenCount = Math.max(0, selectedOptions.length - MAX_VISIBLE_CHIPS);
 
-  const noun = (label.split(/[\s(]/)[0] ?? label).toLowerCase();
   const liveMessage =
-    value.length === 0
-      ? `Aucune ${noun} sélectionnée`
-      : value.length === 1
-        ? `1 ${noun} sélectionnée`
-        : `${value.length} ${noun} sélectionnées`;
+    formatSelectionCount?.(value.length) ??
+    defaultFormatSelectionCount(
+      value.length,
+      itemLabelSingular,
+      itemLabelPlural,
+    );
 
   function toggle(optionValue: string) {
     if (selectedSet.has(optionValue)) {
@@ -254,7 +281,7 @@ function MultiSelectControl({
           keywords={[option.label, option.value]}
           disabled={optionDisabled}
           data-checked={selected}
-          aria-selected={selected}
+          aria-checked={selected}
           onSelect={() => {
             if (optionDisabled) return;
             toggle(option.value);
@@ -265,13 +292,14 @@ function MultiSelectControl({
           )}
         >
           {option.label}
+          {selected ? <span className="sr-only"> sélectionnée</span> : null}
         </CommandItem>
       );
     });
   }
 
   const chipClassName =
-    "h-6 min-h-6 normal-case tracking-normal gap-2 py-0 pl-2 pr-0.5";
+    "h-6 min-h-6 overflow-visible normal-case tracking-normal gap-2 py-0 pl-2 pr-0.5";
 
   return (
     <div className="flex flex-col gap-2">
@@ -294,9 +322,7 @@ function MultiSelectControl({
             className={cn(selectTriggerClassName, "w-full")}
           >
             <span className="truncate">
-              {value.length === 0
-                ? placeholder
-                : `${value.length} sélectionnée${value.length > 1 ? "s" : ""}`}
+              {value.length === 0 ? placeholder : liveMessage}
             </span>
             <ChevronDown
               aria-hidden="true"
@@ -305,12 +331,9 @@ function MultiSelectControl({
           </button>
         </PopoverTrigger>
         <PopoverContent
-          id={contentId}
           align="start"
           sideOffset={8}
           className="w-(--radix-popover-trigger-width) min-w-64 overflow-hidden rounded-lg p-0"
-          role="listbox"
-          aria-multiselectable="true"
           aria-label={label}
         >
           <Command
@@ -330,7 +353,14 @@ function MultiSelectControl({
             <div className="flex flex-wrap gap-2 border-b border-input px-3 py-1">
               <button
                 type="button"
-                disabled={disabled || atMax || options.every((o) => selectedSet.has(o.value) || o.disabled)}
+                disabled={
+                  disabled ||
+                  atMax ||
+                  options.every(
+                    (option) =>
+                      selectedSet.has(option.value) || option.disabled,
+                  )
+                }
                 onClick={selectAll}
                 className="min-h-11 rounded-md px-3 text-base text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:text-muted-foreground"
               >
@@ -345,7 +375,12 @@ function MultiSelectControl({
                 Tout effacer
               </button>
             </div>
-            <CommandList>
+            <CommandList
+              id={contentId}
+              role="listbox"
+              aria-multiselectable="true"
+              aria-label={label}
+            >
               <CommandEmpty>
                 {search
                   ? `Aucun résultat pour « ${search} »`
@@ -353,7 +388,8 @@ function MultiSelectControl({
               </CommandEmpty>
               {atMax ? (
                 <p className="px-3 py-2 text-base text-muted-foreground">
-                  Limite atteinte ({max}). Retirez une sélection pour en ajouter.
+                  Limite atteinte ({max}). Retirez une sélection pour en
+                  ajouter.
                 </p>
               ) : null}
               {ungrouped.length > 0 ? (
@@ -386,7 +422,7 @@ function MultiSelectControl({
                   aria-label={`Retirer ${option.label}`}
                   disabled={disabled}
                   onClick={() => remove(option.value)}
-                  className="relative flex items-center justify-center rounded-sm pt-0.5 pr-0.5 pb-0.5 text-muted-foreground outline-none after:absolute after:-inset-2.5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
+                  className="relative -my-2.5 -mr-2.5 flex size-11 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
                 >
                   <X aria-hidden="true" className="size-2.5" />
                 </button>
@@ -396,14 +432,16 @@ function MultiSelectControl({
           {hiddenCount > 0 ? (
             <li>
               <Badge variant="outline" className={cn(chipClassName, "pr-2")}>
-                + {hiddenCount} autres
+                {hiddenCount === 1
+                  ? "+ 1 autre"
+                  : `+ ${hiddenCount} autres`}
               </Badge>
             </li>
           ) : null}
         </ul>
       ) : null}
 
-      <p id={liveId} className="sr-only" aria-live="polite">
+      <p id={liveId} className="sr-only" role="status" aria-live="polite">
         {liveMessage}
       </p>
     </div>
