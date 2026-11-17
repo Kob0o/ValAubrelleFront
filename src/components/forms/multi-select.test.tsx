@@ -143,7 +143,7 @@ describe("MultiSelect", () => {
     expect(screen.getByText("Sud")).toBeVisible();
   });
 
-  it("n'a pas de violation axe", async () => {
+  it("n'a pas de violation axe fermé", async () => {
     const { container } = render(
       <ControlledMultiSelect
         required
@@ -152,6 +152,18 @@ describe("MultiSelect", () => {
         value={["ecully"]}
       />,
     );
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it("n'a pas de violation axe ouvert", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <ControlledMultiSelect value={["ecully"]} />,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Communes" }));
+    await screen.findByRole("option", { name: "Écully" });
+
     expect(await axeViolations(container)).toEqual([]);
   });
 });

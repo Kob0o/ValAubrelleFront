@@ -174,12 +174,13 @@ function MultiSelectControl({
   const visibleChips = selectedOptions.slice(0, MAX_VISIBLE_CHIPS);
   const hiddenCount = Math.max(0, selectedOptions.length - MAX_VISIBLE_CHIPS);
 
+  const noun = (label.split(/[\s(]/)[0] ?? label).toLowerCase();
   const liveMessage =
     value.length === 0
-      ? "Aucune sélection"
+      ? `Aucune ${noun} sélectionnée`
       : value.length === 1
-        ? "1 sélectionnée"
-        : `${value.length} sélectionnées`;
+        ? `1 ${noun} sélectionnée`
+        : `${value.length} ${noun} sélectionnées`;
 
   function toggle(optionValue: string) {
     if (selectedSet.has(optionValue)) {
@@ -285,7 +286,7 @@ function MultiSelectControl({
                   aria-label={`Retirer ${option.label}`}
                   disabled={disabled}
                   onClick={() => remove(option.value)}
-                  className="flex size-6 items-center justify-center rounded-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
+                  className="relative flex size-6 items-center justify-center rounded-sm text-muted-foreground outline-none after:absolute after:-inset-2.5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
                 >
                   <X aria-hidden="true" className="size-3.5" />
                 </button>
