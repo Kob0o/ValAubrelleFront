@@ -1,13 +1,14 @@
 "use client";
 
 import {
+  useEffect,
   useId,
   useMemo,
   useRef,
   useState,
   type KeyboardEvent,
 } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { Check, ChevronDown, Search, X } from "lucide-react";
 import { cn } from "cn";
 
 import {
@@ -15,14 +16,6 @@ import {
   type FieldControlProps,
 } from "@/components/forms/field-wrapper";
 import { Badge } from "@/components/ui/badge";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
@@ -72,15 +65,13 @@ function defaultFormatSelectionCount(
   return `${count} ${plural} sélectionnés`;
 }
 
-function filterOptions(
-  value: string,
-  search: string,
-  keywords: string[] = [],
-): number {
+function matchesSearch(option: MultiSelectOption, search: string): boolean {
   const needle = normalizeSearch(search);
-  if (!needle) return 1;
-  const haystack = [value, ...keywords].map(normalizeSearch).join(" ");
-  return haystack.includes(needle) ? 1 : 0;
+  if (!needle) return true;
+  return (
+    normalizeSearch(option.label).includes(needle) ||
+    normalizeSearch(option.value).includes(needle)
+  );
 }
 
 function groupOptions(options: readonly MultiSelectOption[]) {
@@ -98,6 +89,14 @@ function groupOptions(options: readonly MultiSelectOption[]) {
   }
 
   return { ungrouped, groups };
+}
+
+function isOptionDisabled(
+  option: MultiSelectOption,
+  selected: boolean,
+  atMax: boolean,
+): boolean {
+  return Boolean(option.disabled) || (atMax && !selected);
 }
 
 export function MultiSelect({
@@ -178,8 +177,12 @@ function MultiSelectControl({
 }: MultiSelectControlProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const contentId = `${useId()}-options`;
+  const searchRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const panelId = `${useId()}-panel`;
+  const listId = `${useId()}-list`;
   const liveId = `${control.id}-selection`;
 
   const selectedSet = useMemo(() => new Set(value), [value]);
@@ -196,7 +199,29 @@ function MultiSelectControl({
     .filter((option): option is MultiSelectOption => Boolean(option));
 
   const atMax = max !== undefined && value.length >= max;
-  const { ungrouped, groups } = useMemo(() => groupOptions(options), [options]);
+
+  const filteredOptions = useMemo(
+    () => options.filter((option) => matchesSearch(option, search)),
+    [options, search],
+  );
+
+  const { ungrouped, groups } = useMemo(
+    () => groupOptions(filteredOptions),
+    [filteredOptions],
+  );
+
+  const flatOptions = useMemo(() => {
+    const list = [...ungrouped];
+    for (const items of groups.values()) {
+      list.push(...items);
+    }
+    return list;
+  }, [ungrouped, groups]);
+
+  const activeOption = flatOptions[activeIndex];
+  const activeOptionId = activeOption
+    ? `${listId}-opt-${activeOption.value}`
+    : undefined;
 
   const visibleChips = selectedOptions.slice(0, MAX_VISIBLE_CHIPS);
   const hiddenCount = Math.max(0, selectedOptions.length - MAX_VISIBLE_CHIPS);
@@ -208,6 +233,30 @@ function MultiSelectControl({
       itemLabelSingular,
       itemLabelPlural,
     );
+
+  useEffect(() => {
+    if (!open) return;
+    setActiveIndex(0);
+    if (searchable) {
+      queueMicrotask(() => searchRef.current?.focus());
+    } else {
+      queueMicrotask(() => listRef.current?.focus());
+    }
+  }, [open, searchable]);
+
+  useEffect(() => {
+    setActiveIndex((current) => {
+      if (flatOptions.length === 0) return 0;
+      return Math.min(current, flatOptions.length - 1);
+    });
+  }, [flatOptions.length]);
+
+  useEffect(() => {
+    if (!open || !activeOptionId) return;
+    document
+      .getElementById(activeOptionId)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [open, activeOptionId]);
 
   function toggle(optionValue: string) {
     if (selectedSet.has(optionValue)) {
@@ -236,6 +285,28 @@ function MultiSelectControl({
     onChange([]);
   }
 
+  function moveActive(delta: number) {
+    if (flatOptions.length === 0) return;
+    setActiveIndex((current) => {
+      let next = current;
+      for (let step = 0; step < flatOptions.length; step += 1) {
+        next = (next + delta + flatOptions.length) % flatOptions.length;
+        const option = flatOptions[next];
+        const selected = selectedSet.has(option.value);
+        if (!isOptionDisabled(option, selected, atMax)) return next;
+      }
+      return current;
+    });
+  }
+
+  function toggleActive() {
+    const option = flatOptions[activeIndex];
+    if (!option) return;
+    const selected = selectedSet.has(option.value);
+    if (isOptionDisabled(option, selected, atMax)) return;
+    toggle(option.value);
+  }
+
   function handleTriggerKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
@@ -253,10 +324,43 @@ function MultiSelectControl({
     }
   }
 
-  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Backspace" && search === "" && value.length > 0) {
-      event.preventDefault();
-      onChange(value.slice(0, -1));
+  function handleListKeyDown(event: KeyboardEvent<HTMLElement>) {
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        moveActive(1);
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        moveActive(-1);
+        break;
+      case "Enter":
+        event.preventDefault();
+        toggleActive();
+        break;
+      case " ":
+        if (event.currentTarget instanceof HTMLInputElement && search !== "") {
+          return;
+        }
+        event.preventDefault();
+        toggleActive();
+        break;
+      case "Backspace":
+        if (
+          event.currentTarget instanceof HTMLInputElement &&
+          search === "" &&
+          value.length > 0
+        ) {
+          event.preventDefault();
+          onChange(value.slice(0, -1));
+        }
+        break;
+      case "Escape":
+        event.preventDefault();
+        setOpen(false);
+        break;
+      default:
+        break;
     }
   }
 
@@ -264,38 +368,57 @@ function MultiSelectControl({
     setOpen(next);
     if (!next) {
       setSearch("");
+      setActiveIndex(0);
       queueMicrotask(() => triggerRef.current?.focus());
     }
   }
 
-  function renderItems(items: readonly MultiSelectOption[]) {
-    return items.map((option) => {
-      const selected = selectedSet.has(option.value);
-      const optionDisabled =
-        Boolean(option.disabled) || (atMax && !selected);
+  function renderOption(option: MultiSelectOption, isLast: boolean) {
+    const selected = selectedSet.has(option.value);
+    const optionDisabled = isOptionDisabled(option, selected, atMax);
+    const active = flatOptions[activeIndex]?.value === option.value;
+    const optionDomId = `${listId}-opt-${option.value}`;
 
-      return (
-        <CommandItem
-          key={option.value}
-          value={option.label}
-          keywords={[option.label, option.value]}
-          disabled={optionDisabled}
-          data-checked={selected}
-          aria-checked={selected}
-          onSelect={() => {
-            if (optionDisabled) return;
-            toggle(option.value);
-          }}
+    return (
+      <div
+        key={option.value}
+        id={optionDomId}
+        role="option"
+        aria-selected={selected}
+        aria-disabled={optionDisabled || undefined}
+        data-active={active || undefined}
+        data-checked={selected || undefined}
+        tabIndex={-1}
+        onMouseEnter={() => {
+          const index = flatOptions.findIndex(
+            (item) => item.value === option.value,
+          );
+          if (index >= 0) setActiveIndex(index);
+        }}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => {
+          if (optionDisabled) return;
+          toggle(option.value);
+        }}
+        className={cn(
+          "relative flex min-h-11 cursor-default items-center gap-2 px-3 py-2 text-base text-foreground outline-hidden select-none",
+          isLast ? "rounded-b-lg" : "rounded-none",
+          selected && "bg-muted font-semibold",
+          active &&
+            "bg-accent outline-2 -outline-offset-2 outline-solid outline-primary",
+          optionDisabled && "pointer-events-none text-muted-foreground",
+        )}
+      >
+        <span className="flex-1 truncate">{option.label}</span>
+        <Check
+          aria-hidden="true"
           className={cn(
-            "rounded-none last:rounded-b-lg",
-            selected && "bg-muted",
+            "size-4 shrink-0",
+            selected ? "opacity-100" : "opacity-0",
           )}
-        >
-          {option.label}
-          {selected ? <span className="sr-only"> sélectionnée</span> : null}
-        </CommandItem>
-      );
-    });
+        />
+      </div>
+    );
   }
 
   const chipClassName =
@@ -311,7 +434,8 @@ function MultiSelectControl({
             type="button"
             role="combobox"
             aria-expanded={open}
-            aria-controls={contentId}
+            aria-controls={panelId}
+            aria-haspopup="listbox"
             aria-describedby={[control["aria-describedby"], liveId]
               .filter(Boolean)
               .join(" ")}
@@ -331,83 +455,113 @@ function MultiSelectControl({
           </button>
         </PopoverTrigger>
         <PopoverContent
+          id={panelId}
           align="start"
           sideOffset={8}
           className="w-(--radix-popover-trigger-width) min-w-64 overflow-hidden rounded-lg p-0"
           aria-label={label}
+          onOpenAutoFocus={(event) => event.preventDefault()}
         >
-          <Command
-            label={`Rechercher dans ${label}`}
-            filter={filterOptions}
-            className="rounded-lg! p-0"
-            shouldFilter={searchable}
-          >
-            {searchable ? (
-              <CommandInput
-                placeholder="Rechercher…"
-                value={search}
-                onValueChange={setSearch}
-                onKeyDown={handleSearchKeyDown}
+          {searchable ? (
+            <div className="flex items-center gap-2 rounded-t-[inherit] border-b border-input px-3 has-focus-visible:ring-2 has-focus-visible:ring-ring has-focus-visible:ring-inset">
+              <Search
+                aria-hidden="true"
+                className="size-4 shrink-0 text-muted-foreground"
               />
-            ) : null}
-            <div className="flex flex-wrap gap-2 border-b border-input px-3 py-1">
-              <button
-                type="button"
-                disabled={
-                  disabled ||
-                  atMax ||
-                  options.every(
-                    (option) =>
-                      selectedSet.has(option.value) || option.disabled,
-                  )
-                }
-                onClick={selectAll}
-                className="min-h-11 rounded-md px-3 text-base text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:text-muted-foreground"
-              >
-                Tout sélectionner
-              </button>
-              <button
-                type="button"
-                disabled={disabled || value.length === 0}
-                onClick={clearAll}
-                className="min-h-11 rounded-md px-3 text-base text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:text-muted-foreground"
-              >
-                Tout effacer
-              </button>
+              <input
+                ref={searchRef}
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                onKeyDown={handleListKeyDown}
+                aria-label={`Rechercher dans ${label}`}
+                aria-controls={listId}
+                aria-autocomplete="list"
+                aria-activedescendant={activeOptionId}
+                placeholder="Rechercher…"
+                className="h-11 w-full min-w-0 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:text-muted-foreground"
+              />
             </div>
-            <CommandList
-              id={contentId}
-              role="listbox"
-              aria-multiselectable="true"
-              aria-label={label}
+          ) : null}
+
+          <div className="flex flex-wrap gap-2 border-b border-input px-3 py-1">
+            <button
+              type="button"
+              disabled={
+                disabled ||
+                atMax ||
+                options.every(
+                  (option) =>
+                    selectedSet.has(option.value) || option.disabled,
+                )
+              }
+              onClick={selectAll}
+              className="min-h-11 rounded-md px-3 text-base text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:text-muted-foreground"
             >
-              <CommandEmpty>
+              Tout sélectionner
+            </button>
+            <button
+              type="button"
+              disabled={disabled || value.length === 0}
+              onClick={clearAll}
+              className="min-h-11 rounded-md px-3 text-base text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:text-muted-foreground"
+            >
+              Tout effacer
+            </button>
+          </div>
+
+          <div
+            ref={listRef}
+            id={listId}
+            role="listbox"
+            aria-multiselectable="true"
+            aria-label={label}
+            aria-activedescendant={activeOptionId}
+            tabIndex={searchable ? -1 : 0}
+            onKeyDown={handleListKeyDown}
+            className="no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto outline-none"
+          >
+            {flatOptions.length === 0 ? (
+              <p className="px-3 py-6 text-center text-base text-muted-foreground">
                 {search
                   ? `Aucun résultat pour « ${search} »`
                   : "Aucune option disponible"}
-              </CommandEmpty>
-              {atMax ? (
-                <p className="px-3 py-2 text-base text-muted-foreground">
-                  Limite atteinte ({max}). Retirez une sélection pour en
-                  ajouter.
+              </p>
+            ) : null}
+
+            {atMax ? (
+              <p className="px-3 py-2 text-base text-muted-foreground">
+                Limite atteinte ({max}). Retirez une sélection pour en
+                ajouter.
+              </p>
+            ) : null}
+
+            {ungrouped.length > 0 ? (
+              <div className="pt-1">
+                {ungrouped.map((option, index) =>
+                  renderOption(
+                    option,
+                    index === ungrouped.length - 1 && groups.size === 0,
+                  ),
+                )}
+              </div>
+            ) : null}
+
+            {[...groups.entries()].map(([groupName, items], groupIndex) => (
+              <div key={groupName} role="group" aria-label={groupName}>
+                <p className="px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                  {groupName}
                 </p>
-              ) : null}
-              {ungrouped.length > 0 ? (
-                <CommandGroup className="p-0 pt-1">
-                  {renderItems(ungrouped)}
-                </CommandGroup>
-              ) : null}
-              {[...groups.entries()].map(([groupName, items]) => (
-                <CommandGroup
-                  key={groupName}
-                  heading={groupName}
-                  className="p-0 pt-1"
-                >
-                  {renderItems(items)}
-                </CommandGroup>
-              ))}
-            </CommandList>
-          </Command>
+                {items.map((option, index) =>
+                  renderOption(
+                    option,
+                    groupIndex === groups.size - 1 &&
+                      index === items.length - 1,
+                  ),
+                )}
+              </div>
+            ))}
+          </div>
         </PopoverContent>
       </Popover>
 

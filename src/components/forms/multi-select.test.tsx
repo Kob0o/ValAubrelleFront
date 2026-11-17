@@ -56,12 +56,12 @@ describe("MultiSelect", () => {
 
     await user.click(screen.getByRole("combobox", { name: "Communes" }));
     await user.click(await screen.findByRole("option", { name: "Aubrecourt" }));
-    await user.click(screen.getByRole("option", { name: /Écully/ }));
+    await user.click(screen.getByRole("option", { name: "Écully" }));
 
     expect(onChange).toHaveBeenLastCalledWith(["aubrecourt", "ecully"]);
 
     const bellemont = screen.getByRole("option", { name: "Bellemont" });
-    expect(bellemont).toHaveAttribute("data-disabled", "true");
+    expect(bellemont).toHaveAttribute("aria-disabled", "true");
 
     await user.click(screen.getByRole("button", { name: "Tout sélectionner" }));
     expect(onChange).toHaveBeenLastCalledWith(["aubrecourt", "ecully"]);
@@ -73,13 +73,13 @@ describe("MultiSelect", () => {
     render(<ControlledMultiSelect />);
 
     await user.click(screen.getByRole("combobox", { name: "Communes" }));
-    const search = await screen.findByRole("combobox", {
+    const search = await screen.findByRole("searchbox", {
       name: "Rechercher dans Communes",
     });
-    await user.click(search);
-    await user.keyboard("ecully");
+    await user.clear(search);
+    await user.type(search, "ecully");
 
-    expect(screen.getByRole("option", { name: /Écully/ })).toBeVisible();
+    expect(screen.getByRole("option", { name: "Écully" })).toBeVisible();
     expect(
       screen.queryByRole("option", { name: "Aubrecourt" }),
     ).not.toBeInTheDocument();
@@ -110,11 +110,26 @@ describe("MultiSelect", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Communes" }));
-    const search = await screen.findByRole("combobox", {
+    const search = await screen.findByRole("searchbox", {
       name: "Rechercher dans Communes",
     });
-    await user.click(search);
+    search.focus();
     await user.keyboard("{Backspace}");
+
+    expect(onChange).toHaveBeenCalledWith(["aubrecourt"]);
+  });
+
+  it("coche l'option active avec Espace quand la recherche est vide", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<ControlledMultiSelect onChange={onChange} />);
+
+    await user.click(screen.getByRole("combobox", { name: "Communes" }));
+    const search = await screen.findByRole("searchbox", {
+      name: "Rechercher dans Communes",
+    });
+    search.focus();
+    await user.keyboard(" ");
 
     expect(onChange).toHaveBeenCalledWith(["aubrecourt"]);
   });
@@ -180,31 +195,33 @@ describe("MultiSelect", () => {
     );
   });
 
-  it("expose aria-checked true/false selon la sélection réelle", async () => {
+  it("garde aria-selected sur la sélection réelle, pas sur l'option active", async () => {
     const user = userEvent.setup();
     render(<ControlledMultiSelect value={["ecully"]} />);
 
     await user.click(screen.getByRole("combobox", { name: "Communes" }));
-    const selected = await screen.findByRole("option", { name: /Écully/ });
-    const unselected = screen.getByRole("option", { name: "Aubrecourt" });
+    const selected = await screen.findByRole("option", { name: "Écully" });
+    const activeUnselected = screen.getByRole("option", { name: "Aubrecourt" });
 
-    expect(selected).toHaveAttribute("aria-checked", "true");
-    expect(selected).toHaveTextContent(/sélectionnée/);
-    expect(unselected).toHaveAttribute("aria-checked", "false");
+    expect(selected).toHaveAttribute("aria-selected", "true");
+    expect(activeUnselected).toHaveAttribute("aria-selected", "false");
+    expect(activeUnselected).toHaveAttribute("data-active", "true");
   });
 
-  it("n'a qu'une listbox (pas d'imbrication)", async () => {
+  it("relie aria-controls au panneau et nomme la listbox Communes", async () => {
     const user = userEvent.setup();
     render(<ControlledMultiSelect value={["ecully"]} />);
 
-    await user.click(screen.getByRole("combobox", { name: "Communes" }));
-    await screen.findByRole("option", { name: /Écully/ });
+    const trigger = screen.getByRole("combobox", { name: "Communes" });
+    await user.click(trigger);
 
+    const panelId = trigger.getAttribute("aria-controls");
+    expect(panelId).toBeTruthy();
+    expect(document.getElementById(panelId!)).not.toBeNull();
+
+    const listbox = await screen.findByRole("listbox", { name: "Communes" });
+    expect(listbox).toHaveAttribute("aria-multiselectable", "true");
     expect(screen.getAllByRole("listbox")).toHaveLength(1);
-    expect(screen.getByRole("listbox")).toHaveAttribute(
-      "aria-multiselectable",
-      "true",
-    );
   });
 
   it("n'a pas de violation axe fermé", async () => {
@@ -224,7 +241,7 @@ describe("MultiSelect", () => {
     render(<ControlledMultiSelect value={["ecully"]} />);
 
     await user.click(screen.getByRole("combobox", { name: "Communes" }));
-    await screen.findByRole("option", { name: /Écully/ });
+    await screen.findByRole("option", { name: "Écully" });
 
     expect(await axeViolations(document.body)).toEqual([]);
   });
