@@ -83,9 +83,18 @@ describe("Checkbox", () => {
 
   it("offre une ligne cliquable d'au moins 44 px", () => {
     render(<ControlledCheckbox />);
-    expect(screen.getByText("Recevoir les notifications").parentElement).toHaveClass(
-      "min-h-11",
-    );
+    expect(
+      screen.getByText("Recevoir les notifications").closest(".min-h-11"),
+    ).not.toBeNull();
+  });
+
+  it("place le badge Obligatoire sur la ligne du libellé", () => {
+    render(<ControlledCheckbox required />);
+
+    const label = screen.getByText("Recevoir les notifications");
+    const badge = screen.getByText("Obligatoire");
+    expect(badge.parentElement).toBe(label.parentElement);
+    expect(label.parentElement).toHaveClass("flex", "flex-wrap", "items-center");
   });
 
   it("relie description et erreur", () => {

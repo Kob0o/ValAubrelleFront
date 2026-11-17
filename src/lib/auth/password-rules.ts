@@ -9,7 +9,11 @@
  * `failedRules` : à faire valider par le back.
  */
 
-/** Règle affichée par `PasswordField` ; `met` vient du contrôle local ou de `failedRules` (422). */
+/**
+ * Règle affichée par `PasswordField` ; `met` vient du contrôle local ou de
+ * `failedRules` (422). `label` est un fragment inséré dans une phrase
+ * (« Il manque : une majuscule et un chiffre. »), sans majuscule initiale.
+ */
 export type PasswordRule = {
   id: string;
   label: string;
@@ -43,22 +47,22 @@ const definitions: readonly RuleDefinition[] = [
   },
   {
     id: "uppercase",
-    label: "Au moins une majuscule",
+    label: "une majuscule",
     test: (value) => /\p{Lu}/u.test(value),
   },
   {
     id: "lowercase",
-    label: "Au moins une minuscule",
+    label: "une minuscule",
     test: (value) => /\p{Ll}/u.test(value),
   },
   {
     id: "digit",
-    label: "Au moins un chiffre",
+    label: "un chiffre",
     test: (value) => /\p{Nd}/u.test(value),
   },
   {
     id: "special",
-    label: "Au moins un caractère spécial (ex. : ! ? @ # - _)",
+    label: "un caractère spécial (ex. : ! ? @ # - _)",
     // Tout ce qui n'est ni lettre, ni chiffre, ni espace.
     test: (value) => /[^\p{L}\p{Nd}\s]/u.test(value),
   },

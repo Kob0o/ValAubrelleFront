@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   PasswordField,
+  passwordRulesStatus,
   type PasswordFieldProps,
 } from "@/components/forms/password-field";
 import { axeViolations } from "@/test/axe";
@@ -25,9 +26,12 @@ function ControlledPassword(props: Partial<PasswordFieldProps>) {
   );
 }
 
+const rule = (id: string, label: string, met: boolean) => ({ id, label, met });
+
 const rules = [
-  { id: "length", label: "12 caractères minimum", met: true },
-  { id: "digit", label: "Au moins un chiffre", met: false },
+  rule("min_length", "12 caractères minimum", true),
+  rule("uppercase", "une majuscule", false),
+  rule("digit", "un chiffre", false),
 ];
 
 describe("PasswordField", () => {
@@ -83,20 +87,53 @@ describe("PasswordField", () => {
     );
   });
 
-  it("affiche les règles avec icône et texte, reliées par aria-describedby", () => {
+  it("résume les règles non respectées en un seul message relié au champ", () => {
     render(<ControlledPassword rules={rules} />);
 
-    expect(screen.getByText("12 caractères minimum : respectée")).toBeVisible();
-    expect(screen.getByText("Au moins un chiffre : non respectée")).toBeVisible();
-    expect(screen.getByLabelText("Mot de passe")).toHaveAccessibleDescription(
-      "12 caractères minimum : respectée Au moins un chiffre : non respectée",
-    );
+    const message = "Il manque : une majuscule et un chiffre.";
+    expect(screen.getByText(message)).toBeVisible();
+    // Une seule ligne, pas une par règle.
+    expect(document.querySelectorAll("[data-rules-state]")).toHaveLength(1);
+    expect(screen.queryByText(/respectée/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Mot de passe")).toHaveAccessibleDescription(message);
   });
 
-  it("lit l'aide, l'erreur puis les règles", () => {
+  it("met à jour le message pendant la saisie", () => {
+    const { rerender } = render(
+      <PasswordField
+        label="Mot de passe"
+        name="password"
+        value=""
+        onChange={() => {}}
+        rules={rules.map((r) => ({ ...r, met: false }))}
+      />,
+    );
+    expect(
+      screen.getByText(
+        "Le mot de passe doit contenir : 12 caractères minimum, une majuscule et un chiffre.",
+      ).closest("[data-rules-state]"),
+    ).toHaveAttribute("data-rules-state", "none-met");
+
+    rerender(
+      <PasswordField
+        label="Mot de passe"
+        name="password"
+        value="Aubrelle-2026"
+        onChange={() => {}}
+        rules={rules.map((r) => ({ ...r, met: true }))}
+      />,
+    );
+    expect(
+      screen
+        .getByText("Le mot de passe respecte toutes les règles.")
+        .closest("[data-rules-state]"),
+    ).toHaveAttribute("data-rules-state", "all-met");
+  });
+
+  it("lit l'aide, l'erreur puis le message des règles", () => {
     render(
       <ControlledPassword
-        rules={[rules[1]]}
+        rules={rules}
         hint="Choisissez un mot de passe que vous n'utilisez pas ailleurs."
         error="Le mot de passe ne respecte pas toutes les règles."
       />,
@@ -105,7 +142,7 @@ describe("PasswordField", () => {
     const input = screen.getByLabelText("Mot de passe");
     expect(input).toHaveAttribute("aria-invalid", "true");
     expect(input).toHaveAccessibleDescription(
-      "Choisissez un mot de passe que vous n'utilisez pas ailleurs. Erreur : Le mot de passe ne respecte pas toutes les règles. Au moins un chiffre : non respectée",
+      "Choisissez un mot de passe que vous n'utilisez pas ailleurs. Erreur : Le mot de passe ne respecte pas toutes les règles. Il manque : une majuscule et un chiffre.",
     );
   });
 
@@ -158,5 +195,27 @@ describe("PasswordField", () => {
       />,
     );
     expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("passwordRulesStatus", () => {
+  const r = (label: string, met: boolean) => ({ id: label, label, met });
+
+  it("une seule règle manquante", () => {
+    expect(passwordRulesStatus([r("une majuscule", false), r("un chiffre", true)])).toEqual({
+      state: "missing",
+      message: "Il manque : une majuscule.",
+    });
+  });
+
+  it("joint les règles manquantes avec des virgules et « et »", () => {
+    expect(
+      passwordRulesStatus([
+        r("12 caractères minimum", false),
+        r("une majuscule", false),
+        r("une minuscule", true),
+        r("un chiffre", false),
+      ]).message,
+    ).toBe("Il manque : 12 caractères minimum, une majuscule et un chiffre.");
   });
 });

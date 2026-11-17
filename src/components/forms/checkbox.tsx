@@ -75,23 +75,26 @@ export function Checkbox({
           />
         </span>
         <div className="flex min-h-11 flex-1 flex-col justify-center py-2.5">
-          <label
-            htmlFor={controlId}
-            className={cn(
-              "text-base leading-snug",
-              disabled
-                ? "cursor-not-allowed text-muted-foreground"
-                : "cursor-pointer text-foreground",
-            )}
-          >
-            {label}
-          </label>
-          {/* Indication visuelle, comme FieldWrapper ; `aria-required` l'annonce déjà. */}
-          {required ? (
-            <Badge variant="secondary" aria-hidden="true" className="mt-1 self-start">
-              Obligatoire
-            </Badge>
-          ) : null}
+          {/* Badge sur la même ligne que le libellé ; il passe dessous seulement si la place manque. */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <label
+              htmlFor={controlId}
+              className={cn(
+                "text-base leading-snug",
+                disabled
+                  ? "cursor-not-allowed text-muted-foreground"
+                  : "cursor-pointer text-foreground",
+              )}
+            >
+              {label}
+            </label>
+            {/* Indication visuelle, comme FieldWrapper ; `aria-required` l'annonce déjà. */}
+            {required ? (
+              <Badge variant="secondary" aria-hidden="true">
+                Obligatoire
+              </Badge>
+            ) : null}
+          </div>
           {description ? (
             <p id={descriptionId} className="text-base text-muted-foreground">
               {description}

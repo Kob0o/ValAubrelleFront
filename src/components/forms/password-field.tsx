@@ -34,7 +34,10 @@ export type PasswordFieldProps = NativeInputProps & {
    * réinitialisation : le gestionnaire de mots de passe propose alors d'en générer un.
    */
   autoComplete?: "current-password" | "new-password";
-  /** Règles affichées sous le champ, chacune avec icône **et** texte. */
+  /**
+   * Règles du mot de passe : résumées sous le champ en un seul message
+   * (icône **et** texte) qui cumule celles non respectées.
+   */
   rules?: PasswordRule[];
   error?: string;
   /** Consigne affichée dans l'infobulle d'aide (jamais dans `placeholder`). */
@@ -45,7 +48,7 @@ export type PasswordFieldProps = NativeInputProps & {
 
 /**
  * Mot de passe : même libellé, aide et erreur que `TextField` (`FieldWrapper`),
- * bouton afficher / masquer (`IconButton`) et liste des règles.
+ * bouton afficher / masquer (`IconButton`) et message des règles.
  * Le collage reste autorisé ; la valeur n'est jamais journalisée.
  */
 export function PasswordField({
@@ -110,32 +113,63 @@ export function PasswordField({
   );
 }
 
+const listFormat = new Intl.ListFormat("fr", {
+  style: "long",
+  type: "conjunction",
+});
+
+export type PasswordRulesStatus = {
+  /** `all-met` : tout est respecté ; `none-met` : rien encore ; `missing` : en partie. */
+  state: "all-met" | "none-met" | "missing";
+  message: string;
+};
+
+/**
+ * Un seul message qui cumule les règles non respectées (au lieu d'une ligne
+ * par règle) : « Il manque : une majuscule et un chiffre. »
+ */
+export function passwordRulesStatus(rules: PasswordRule[]): PasswordRulesStatus {
+  const missing = rules.filter((rule) => !rule.met).map((rule) => rule.label);
+
+  if (missing.length === 0) {
+    return {
+      state: "all-met",
+      message: "Le mot de passe respecte toutes les règles.",
+    };
+  }
+  if (missing.length === rules.length) {
+    return {
+      state: "none-met",
+      message: `Le mot de passe doit contenir : ${listFormat.format(missing)}.`,
+    };
+  }
+  return {
+    state: "missing",
+    message: `Il manque : ${listFormat.format(missing)}.`,
+  };
+}
+
 function PasswordRules({ rules }: { rules: PasswordRule[] }) {
+  const { state, message } = passwordRulesStatus(rules);
+  const allMet = state === "all-met";
+
   return (
-    // Pas d'aria-label : il remplacerait le texte des règles dans la description du champ.
-    <ul className="flex flex-col gap-1">
-      {rules.map((rule) => (
-        <li
-          key={rule.id}
-          data-rule={rule.id}
-          data-met={rule.met}
-          className={cn(
-            "flex items-start gap-2 text-base",
-            rule.met ? "text-[var(--color-success)]" : "text-muted-foreground",
-          )}
-        >
-          <span className="flex h-[1lh] shrink-0 items-center">
-            {rule.met ? (
-              <CircleCheck aria-hidden="true" className="size-4" />
-            ) : (
-              <CircleX aria-hidden="true" className="size-4" />
-            )}
-          </span>
-          <span>
-            {rule.label} : {rule.met ? "respectée" : "non respectée"}
-          </span>
-        </li>
-      ))}
-    </ul>
+    <p
+      data-rules-state={state}
+      className={cn(
+        "flex items-start gap-2 text-base",
+        allMet ? "text-[var(--color-success)]" : "text-muted-foreground",
+      )}
+    >
+      {/* Icône + texte : l'état n'est jamais porté par la couleur seule. */}
+      <span className="flex h-[1lh] shrink-0 items-center">
+        {allMet ? (
+          <CircleCheck aria-hidden="true" className="size-4" />
+        ) : (
+          <CircleX aria-hidden="true" className="size-4" />
+        )}
+      </span>
+      <span>{message}</span>
+    </p>
   );
 }
