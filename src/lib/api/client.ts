@@ -4,11 +4,13 @@ import {
   buildApiError,
   isAbortError,
   isApiError,
+  isSessionExpired,
   normalizeError,
   type NormalizedApiError,
 } from "@/lib/api/errors";
 import { getApiBaseUrl, isMockMode } from "@/lib/api/config";
 import { mockFetch } from "@/lib/api/mock-fetch";
+import { notifySessionExpired } from "@/lib/auth/session-expired";
 import type { paths } from "@/types/api";
 
 export { getApiBaseUrl, isMockMode } from "@/lib/api/config";
@@ -87,12 +89,16 @@ export async function unwrapApiResult<T>(
     if (result.response.ok) {
       return result.data as T;
     }
-    throw buildApiError({
+    const apiError = buildApiError({
       httpStatus: result.response.status,
       body: result.error,
       correlationId: result.response.headers.get(CORRELATION_ID_HEADER),
       retryAfter: result.response.headers.get("Retry-After"),
     });
+    if (isSessionExpired(apiError)) {
+      notifySessionExpired();
+    }
+    throw apiError;
   } catch (error) {
     if (isAbortError(error)) throw error;
     if (isApiError(error)) throw error;
