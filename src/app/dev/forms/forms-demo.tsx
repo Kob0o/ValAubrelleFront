@@ -3,6 +3,10 @@
 import { useState, type ReactNode } from "react";
 
 import { getFieldError } from "@/components/forms/field-error";
+import {
+  MultiSelect,
+  type MultiSelectOption,
+} from "@/components/forms/multi-select";
 import { PeriodPicker } from "@/components/forms/period-picker";
 import { SelectField, type SelectOption } from "@/components/forms/select-field";
 import { TextField } from "@/components/forms/text-field";
@@ -19,11 +23,31 @@ import { mockExplorerYears, mockMunicipalities } from "@/mocks";
 import type { ApiError } from "@/types/domain";
 import { ROLES, roleLabels } from "@/types/roles";
 
-/** Les 32 communes fictives des fixtures (#5 G0.B). */
 const communes: SelectOption[] = mockMunicipalities.map((municipality) => ({
   value: municipality.code,
   label: municipality.name,
 }));
+
+const multiCommunes: MultiSelectOption[] = mockMunicipalities.map(
+  (municipality) => ({
+    value: municipality.code,
+    label: municipality.name,
+  }),
+);
+
+const groupedCommunes: MultiSelectOption[] = mockMunicipalities.map(
+  (municipality, index) => ({
+    value: municipality.code,
+    label: municipality.name,
+    group: index < 16 ? "Secteur nord" : "Secteur sud",
+  }),
+);
+
+function formatCommunesCount(count: number): string {
+  if (count === 0) return "Aucune commune sélectionnée";
+  if (count === 1) return "1 commune sélectionnée";
+  return `${count} communes sélectionnées`;
+}
 
 const roles: SelectOption[] = ROLES.map((role) => ({
   value: role,
@@ -80,6 +104,17 @@ export function FormsDemo() {
   const [errorRole, setErrorRole] = useState<string>();
   const [commune, setCommune] = useState<string>();
 
+  const [multiEmpty, setMultiEmpty] = useState<string[]>([]);
+  const [multiFilled, setMultiFilled] = useState<string[]>([
+    "59230",
+    "59231",
+    "59251",
+    "59232",
+  ]);
+  const [multiMax, setMultiMax] = useState<string[]>(["59230", "59231"]);
+  const [multiGrouped, setMultiGrouped] = useState<string[]>([]);
+  const [multiError, setMultiError] = useState<string[]>([]);
+
   const [apiError, setApiError] = useState<ApiError | null>(
     null,
   );
@@ -112,10 +147,10 @@ export function FormsDemo() {
           Champs de saisie et de choix
         </h1>
         <p className="max-w-2xl text-base text-foreground">
-          Tous les états de TextField, Select, YearPicker et PeriodPicker.
-          L’état « focus » et les états ouverts se voient au clavier : Tab pour
-          avancer, Entrée, Espace ou les flèches pour ouvrir une liste, Échap
-          pour la fermer.
+          Tous les états de TextField, Select, MultiSelect, YearPicker et
+          PeriodPicker. L’état « focus » et les états ouverts se voient au
+          clavier : Tab pour avancer, Entrée, Espace ou les flèches pour ouvrir
+          une liste, Échap pour la fermer.
         </p>
         <p className="text-base text-muted-foreground">
           Les champs obligatoires portent le badge « Obligatoire ». L’aide
@@ -259,6 +294,60 @@ export function FormsDemo() {
           searchable
           placeholder="Choisir une commune"
           hint="Tapez pour filtrer les 32 communes."
+        />
+      </DemoSection>
+
+      <DemoSection id="multiselect" title="MultiSelect">
+        <MultiSelect
+          label="Communes (vide)"
+          options={multiCommunes}
+          value={multiEmpty}
+          onChange={setMultiEmpty}
+          placeholder="Choisir des communes"
+          hint="Recherche accent-insensible sur les 32 communes."
+          formatSelectionCount={formatCommunesCount}
+        />
+        <MultiSelect
+          label="Communes (pastilles)"
+          options={multiCommunes}
+          value={multiFilled}
+          onChange={setMultiFilled}
+          hint="Au-delà de 3 pastilles, un compteur « + N autres » apparaît."
+          formatSelectionCount={formatCommunesCount}
+        />
+        <MultiSelect
+          label="Communes (max 3)"
+          options={multiCommunes}
+          value={multiMax}
+          onChange={setMultiMax}
+          max={3}
+          hint="Les options restantes sont désactivées à la limite."
+          formatSelectionCount={formatCommunesCount}
+        />
+        <MultiSelect
+          label="Communes groupées"
+          options={groupedCommunes}
+          value={multiGrouped}
+          onChange={setMultiGrouped}
+          placeholder="Choisir par secteur"
+          formatSelectionCount={formatCommunesCount}
+        />
+        <MultiSelect
+          label="Communes (erreur)"
+          options={multiCommunes}
+          value={multiError}
+          onChange={setMultiError}
+          required
+          error="Choisissez au moins une commune."
+          formatSelectionCount={formatCommunesCount}
+        />
+        <MultiSelect
+          label="Communes (désactivé)"
+          options={multiCommunes}
+          value={["59230", "59231"]}
+          onChange={() => {}}
+          disabled
+          formatSelectionCount={formatCommunesCount}
         />
       </DemoSection>
 
