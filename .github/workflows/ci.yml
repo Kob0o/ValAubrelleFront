@@ -1,37 +1,107 @@
-name: CI
+name: Build & deploy dev
 
 on:
-  pull_request:
-    branches: [develop, main]
   push:
-    branches: [develop, main]
+    branches: [develop]
+  workflow_dispatch:
 
+# Two deploys must not commit to the infra repo at the same time
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy-dev-front-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  REGISTRY: registery-aubrelle.hiappy.fr
+  IMAGE: registery-aubrelle.hiappy.fr/aubrelle-front
+  INFRA_REPO: TitouanSaint-Chamarand/infra-ynov
+  OVERLAY: apps/aubrelle/overlays/dev/kustomization.yaml
 
 jobs:
   verify:
     name: verify
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     steps:
-      - name: Récupérer le code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Installer Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
-      - name: Installer les dépendances
-        run: npm ci
+      - run: npm ci
 
       - name: Lint
         run: npm run lint
 
-      - name: Tests
+      - name: Test
         run: npm test
 
-      - name: Build
-        run: npm run build
+  build-push:
+    needs: verify
+    runs-on: [self-hosted, linux]
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: meta
+        run: echo "tag=${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://aubrelle-api-dev.hiappy.fr
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
+            ${{ env.IMAGE }}:dev
+          cache-from: type=registry,ref=${{ env.IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max
+
+  update-infra:
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.INFRA_REPO }}
+          token: ${{ secrets.INFRA_REPO_TOKEN }}
+          path: infra
+
+      - name: Set image tag in dev overlay
+        working-directory: infra
+        env:
+          TAG: ${{ needs.build-push.outputs.tag }}
+        run: |
+          # Fail loudly if the overlay or the image entry is missing
+          yq -e '.images[] | select(.name == strenv(IMAGE))' "$OVERLAY" > /dev/null
+          yq -i '(.images[] | select(.name == strenv(IMAGE))).newTag = strenv(TAG)' "$OVERLAY"
+          git diff
+
+      - name: Commit and push
+        working-directory: infra
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$OVERLAY"
+          git diff --cached --quiet && exit 0
+          git commit -m "deploy(aubrelle-front): dev -> ${{ needs.build-push.outputs.tag }}"
+          # Retry if another commit (e.g. the back CI) landed in between
+          for i in 1 2 3; do
+            git pull --rebase && git push && exit 0
+            sleep 5
+          done
+          exit 1
