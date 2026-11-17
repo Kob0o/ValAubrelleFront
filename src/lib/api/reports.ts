@@ -1,7 +1,7 @@
 import type { Decision, ReportDraft, Section } from "@/types/domain";
 
 /*
- * EN ATTENTE DU CONTRAT 1.1.0 — création manuelle (US-026).
+ * EN ATTENTE DU CONTRAT 1.1.0 — création manuelle (US-026). Suivi : voir #17.
  * Ces types reprennent à l'identique `createManualReportSection` et
  * `ReportSection.type = "manual"` de la PR back #35, fusionnée sur `main`
  * du back mais absente du contrat de référence front (v1.0.0).
