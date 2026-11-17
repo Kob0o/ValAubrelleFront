@@ -51,6 +51,7 @@ describe("Breadcrumb", () => {
     );
 
     expect(middle).not.toHaveClass("hidden");
+    expect(screen.getByRole("link", { name: "Communes" })).toHaveFocus();
     expect(
       screen.queryByRole("button", { name: /niveaux intermédiaires/ }),
     ).not.toBeInTheDocument();

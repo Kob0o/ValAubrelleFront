@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { flushSync } from "react-dom";
 import { MoreHorizontalIcon } from "lucide-react";
 
 import { Link } from "@/components/shared/link";
@@ -31,13 +32,13 @@ const separator = <BreadcrumbSeparator className="[&>svg]:size-4" />;
  */
 function Breadcrumb({ items, current, className }: BreadcrumbProps) {
   const [expanded, setExpanded] = React.useState(false);
-  const listId = React.useId();
+  const firstHiddenRef = React.useRef<HTMLAnchorElement>(null);
   const [first, ...middle] = items;
   const collapsible = middle.length > 0;
 
   return (
     <BreadcrumbRoot className={className}>
-      <BreadcrumbList id={listId} className="gap-1 text-base text-foreground">
+      <BreadcrumbList className="gap-1 text-base text-foreground">
         {first ? (
           <>
             <BreadcrumbItem>
@@ -54,10 +55,12 @@ function Breadcrumb({ items, current, className }: BreadcrumbProps) {
             <BreadcrumbItem className="sm:hidden">
               <button
                 type="button"
-                aria-expanded={false}
-                aria-controls={listId}
                 aria-label={`Afficher les ${middle.length} niveaux intermédiaires`}
-                onClick={() => setExpanded(true)}
+                onClick={() => {
+                  // Le bouton disparaît : le focus passe au premier niveau déplié.
+                  flushSync(() => setExpanded(true));
+                  firstHiddenRef.current?.focus();
+                }}
                 className="inline-flex size-11 items-center justify-center rounded-md hover:bg-muted focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[color:var(--color-primary-strong)]"
               >
                 <MoreHorizontalIcon aria-hidden className="size-4" />
@@ -67,12 +70,16 @@ function Breadcrumb({ items, current, className }: BreadcrumbProps) {
           </>
         ) : null}
 
-        {middle.map((item) => (
+        {middle.map((item, index) => (
           <React.Fragment key={item.href}>
             <BreadcrumbItem
               className={cn(!expanded && "hidden sm:inline-flex")}
             >
-              <Link href={item.href} className="min-h-11 sm:min-h-0">
+              <Link
+                href={item.href}
+                ref={index === 0 ? firstHiddenRef : undefined}
+                className="min-h-11 sm:min-h-0"
+              >
                 {item.label}
               </Link>
             </BreadcrumbItem>

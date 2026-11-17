@@ -41,9 +41,9 @@ function PaginationDemo({
 
   return (
     <div className={panel}>
-      <h4 ref={headingRef} tabIndex={-1} className="text-base font-semibold">
+      <h3 ref={headingRef} tabIndex={-1} className="text-base font-semibold">
         {title}
-      </h4>
+      </h3>
       <Pagination
         page={page}
         size={size}
@@ -126,8 +126,14 @@ export function NavigationDemo() {
         <PaginationDemo title="Dernière page" total={134} initialPage={7} />
         <PaginationDemo title="Chargement" total={134} initialPage={2} loading />
         <div className={panel}>
-          <h4 className="text-base font-semibold">Une seule page</h4>
-          <Pagination page={1} size={20} total={12} onPageChange={() => {}} />
+          <h3 className="text-base font-semibold">Une seule page</h3>
+          <Pagination
+            page={1}
+            size={20}
+            total={12}
+            onPageChange={() => {}}
+            focusTargetRef={{ current: null }}
+          />
           <p className="text-base text-muted-foreground">
             12 résultats : la pagination est masquée.
           </p>

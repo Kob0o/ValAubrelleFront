@@ -8,6 +8,8 @@ import {
   Pagination,
 } from "@/components/shared/pagination";
 
+const noTarget = { current: null };
+
 afterEach(() => {
   cleanup();
 });
@@ -36,19 +38,19 @@ describe("getPageItems", () => {
 describe("Pagination", () => {
   it("est masquée quand total ≤ size", () => {
     const { container } = render(
-      <Pagination page={1} size={20} total={20} onPageChange={vi.fn()} />,
+      <Pagination page={1} size={20} total={20} onPageChange={vi.fn()} focusTargetRef={noTarget} />,
     );
     expect(container).toBeEmptyDOMElement();
   });
 
   it("ramène une page courante trop grande sur la dernière page", () => {
     const onPageChange = vi.fn();
-    render(<Pagination page={9} size={20} total={134} onPageChange={onPageChange} />);
+    render(<Pagination page={9} size={20} total={134} onPageChange={onPageChange} focusTargetRef={noTarget} />);
     expect(onPageChange).toHaveBeenCalledWith(7);
   });
 
   it("annonce la page courante et le nombre de résultats", () => {
-    render(<Pagination page={2} size={20} total={134} onPageChange={vi.fn()} />);
+    render(<Pagination page={2} size={20} total={134} onPageChange={vi.fn()} focusTargetRef={noTarget} />);
 
     expect(screen.getByRole("navigation", { name: "Pagination" })).toBeInTheDocument();
     const status = screen.getByText("Page 2 sur 7 · 134 résultats");
@@ -61,12 +63,12 @@ describe("Pagination", () => {
 
   it("désactive Précédent sur la première page et Suivant sur la dernière", () => {
     const { rerender } = render(
-      <Pagination page={1} size={20} total={134} onPageChange={vi.fn()} />,
+      <Pagination page={1} size={20} total={134} onPageChange={vi.fn()} focusTargetRef={noTarget} />,
     );
     expect(screen.getByRole("button", { name: "Page précédente" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Page suivante" })).toBeEnabled();
 
-    rerender(<Pagination page={7} size={20} total={134} onPageChange={vi.fn()} />);
+    rerender(<Pagination page={7} size={20} total={134} onPageChange={vi.fn()} focusTargetRef={noTarget} />);
     expect(screen.getByRole("button", { name: "Page précédente" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Page suivante" })).toBeDisabled();
   });
@@ -102,7 +104,7 @@ describe("Pagination", () => {
     const user = userEvent.setup();
     const onPageChange = vi.fn();
     render(
-      <Pagination page={2} size={20} total={134} onPageChange={onPageChange} loading />,
+      <Pagination page={2} size={20} total={134} onPageChange={onPageChange} focusTargetRef={noTarget} loading />,
     );
 
     expect(screen.getByRole("navigation", { name: "Pagination" })).toHaveAttribute(
@@ -126,6 +128,7 @@ describe("Pagination", () => {
         total={134}
         onPageChange={vi.fn()}
         onSizeChange={onSizeChange}
+        focusTargetRef={noTarget}
       />,
     );
 

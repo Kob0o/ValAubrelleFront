@@ -42,8 +42,11 @@ type PaginationProps = Pick<Page<unknown>, "page" | "size" | "total"> & {
   onSizeChange?: (size: number) => void;
   sizes?: readonly number[];
   loading?: boolean;
-  /** Titre ou tableau de la liste (avec `tabIndex={-1}`), focalisé après un changement. */
-  focusTargetRef?: React.RefObject<HTMLElement | null>;
+  /**
+   * Titre ou tableau de la liste (avec `tabIndex={-1}`), focalisé après un
+   * changement : le bouton activé peut devenir désactivé ou disparaître.
+   */
+  focusTargetRef: React.RefObject<HTMLElement | null>;
   className?: string;
 };
 
@@ -76,7 +79,7 @@ function Pagination({
   function goTo(target: number) {
     if (loading || target === currentPage) return;
     onPageChange(target);
-    focusTargetRef?.current?.focus();
+    focusTargetRef.current?.focus();
   }
 
   const results = `${resultFormat.format(total)} résultat${total > 1 ? "s" : ""}`;
