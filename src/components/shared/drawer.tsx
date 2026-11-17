@@ -86,7 +86,7 @@ export function Drawer({
             ) : null}
           </div>
           <SheetClose asChild>
-            <IconButton label="Fermer" className="shrink-0">
+            <IconButton label="Fermer" className="-m-2 shrink-0">
               <X aria-hidden="true" className="size-4" />
             </IconButton>
           </SheetClose>
