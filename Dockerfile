@@ -1,41 +1,14 @@
-# syntax=docker/dockerfile:1
-
-ARG NODE_VERSION=22-alpine
-
-# ---- Dependencies ----
-FROM node:${NODE_VERSION} AS deps
-WORKDIR /app
-RUN apk add --no-cache libc6-compat
-COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm npm ci
-
-# ---- Build ----
-FROM node:${NODE_VERSION} AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-ENV NEXT_TELEMETRY_DISABLED=1
-# NEXT_PUBLIC_* variables are inlined at build time: pass them as build args.
-# ARG NEXT_PUBLIC_API_URL
-# ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-RUN npm run build
-
-# ---- Runtime ----
-FROM node:${NODE_VERSION} AS runner
+FROM node:22-slim
 WORKDIR /app
 ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
-    HOSTNAME=0.0.0.0
+    HOSTNAME=0.0.0.0 \
+    NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup -S -g 1001 nodejs && adduser -S -u 1001 -G nodejs nextjs
+COPY --chown=node:node .next/standalone ./
+COPY --chown=node:node .next/static ./.next/static
+COPY --chown=node:node public ./public
 
-# Standalone output (see next.config.ts: output: "standalone")
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-# Uncomment once a public/ directory exists:
-# COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-
-USER nextjs
+USER node
 EXPOSE 3000
 CMD ["node", "server.js"]
