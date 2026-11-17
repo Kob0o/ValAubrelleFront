@@ -12,3 +12,4 @@ export {
   mockSectionStatuses,
   type StatusSample,
 } from "@/mocks/statuses";
+export { mockExplorerYears } from "@/mocks/years";

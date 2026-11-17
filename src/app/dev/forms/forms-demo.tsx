@@ -3,10 +3,19 @@
 import { useState, type ReactNode } from "react";
 
 import { getFieldError } from "@/components/forms/field-error";
+import { PeriodPicker } from "@/components/forms/period-picker";
 import { SelectField, type SelectOption } from "@/components/forms/select-field";
 import { TextField } from "@/components/forms/text-field";
+import { YearPicker } from "@/components/forms/year-picker";
 import { Button } from "@/components/ui/button";
-import { mockMunicipalities } from "@/mocks";
+import {
+  toDateRangeQuery,
+  toYearRangeQuery,
+  validatePeriod,
+  type PeriodValidation,
+  type YearPeriodInput,
+} from "@/lib/period";
+import { mockExplorerYears, mockMunicipalities } from "@/mocks";
 import type { ApiError } from "@/types/domain";
 import { ROLES, roleLabels } from "@/types/roles";
 
@@ -77,6 +86,19 @@ export function FormsDemo() {
   const [apiEmail, setApiEmail] = useState("marie.dupont@");
   const [apiCommune, setApiCommune] = useState<string>();
 
+  const [year, setYear] = useState<number | undefined>(2024);
+  const [emptyYear, setEmptyYear] = useState<number>();
+  const [errorYear, setErrorYear] = useState<number>();
+  const [period, setPeriod] = useState<YearPeriodInput>({ start: 2019, end: 2024 });
+  const [periodValidation, setPeriodValidation] = useState<PeriodValidation>(() =>
+    validatePeriod({ start: 2019, end: 2024 }, { years: mockExplorerYears }),
+  );
+  const [singlePeriod, setSinglePeriod] = useState<YearPeriodInput>({ start: 2022, end: 2022 });
+  const [invertedPeriod, setInvertedPeriod] = useState<YearPeriodInput>({ start: 2024, end: 2019 });
+  const [partialPeriod, setPartialPeriod] = useState<YearPeriodInput>({ start: 2020, end: undefined });
+  const [noDataPeriod, setNoDataPeriod] = useState<YearPeriodInput>({ start: 2021, end: 2023 });
+  const [strictPeriod, setStrictPeriod] = useState<YearPeriodInput>({ start: 2022, end: 2022 });
+
   return (
     <main
       id="contenu"
@@ -90,9 +112,10 @@ export function FormsDemo() {
           Champs de saisie et de choix
         </h1>
         <p className="max-w-2xl text-base text-foreground">
-          Tous les états de TextField et Select. L’état « focus » et les états
-          ouverts se voient au clavier : Tab pour avancer, Entrée, Espace ou
-          les flèches pour ouvrir une liste, Échap pour la fermer.
+          Tous les états de TextField, Select, YearPicker et PeriodPicker.
+          L’état « focus » et les états ouverts se voient au clavier : Tab pour
+          avancer, Entrée, Espace ou les flèches pour ouvrir une liste, Échap
+          pour la fermer.
         </p>
         <p className="text-base text-muted-foreground">
           Les champs obligatoires portent le badge « Obligatoire ». L’aide
@@ -289,6 +312,109 @@ export function FormsDemo() {
           </div>
         </form>
       </section>
+
+      {/* Séparation avec les champs de G0.F. */}
+      <hr className="border-t-2 border-[var(--color-primary-strong)]" />
+
+      <DemoSection id="year-picker" title="YearPicker">
+        <YearPicker
+          label="Année choisie"
+          years={mockExplorerYears}
+          value={year}
+          onChange={setYear}
+          hint="Les années sans donnée restent visibles mais ne peuvent pas être choisies."
+        />
+        <YearPicker
+          label="Sans sélection"
+          years={mockExplorerYears}
+          value={emptyYear}
+          onChange={setEmptyYear}
+        />
+        <YearPicker
+          label="Valeur absente de la liste (URL ancienne)"
+          years={mockExplorerYears}
+          value={2015}
+          onChange={() => {}}
+        />
+        <YearPicker
+          label="Année sans donnée demandée"
+          years={mockExplorerYears}
+          value={2021}
+          onChange={() => {}}
+        />
+        <YearPicker
+          label="En erreur"
+          years={mockExplorerYears}
+          value={errorYear}
+          onChange={setErrorYear}
+          required
+          error={errorYear === undefined ? "Choisissez l’année à explorer." : undefined}
+        />
+        <YearPicker
+          label="Désactivé"
+          years={mockExplorerYears}
+          value={2023}
+          onChange={() => {}}
+          disabled
+        />
+      </DemoSection>
+
+      <DemoSection id="period-picker" title="PeriodPicker">
+        <div className="flex flex-col gap-4">
+          <PeriodPicker
+            legend="Période (modifiable)"
+            years={mockExplorerYears}
+            value={period}
+            onChange={(next, validation) => {
+              setPeriod(next);
+              setPeriodValidation(validation);
+            }}
+          />
+          <p className="text-base text-muted-foreground">
+            {periodValidation.ok
+              ? `Paramètres envoyés : startYear=${toYearRangeQuery(periodValidation.period).startYear}, endYear=${toYearRangeQuery(periodValidation.period).endYear} ; analyse du ${toDateRangeQuery(periodValidation.period).start} au ${toDateRangeQuery(periodValidation.period).end}.`
+              : `Rien n’est envoyé à l’API : période invalide (${periodValidation.code}).`}
+          </p>
+        </div>
+        <PeriodPicker
+          legend="Année unique (autorisée)"
+          years={mockExplorerYears}
+          value={singlePeriod}
+          onChange={setSinglePeriod}
+        />
+        <PeriodPicker
+          legend="Bornes inversées"
+          years={mockExplorerYears}
+          value={invertedPeriod}
+          onChange={setInvertedPeriod}
+        />
+        <PeriodPicker
+          legend="Borne manquante"
+          years={mockExplorerYears}
+          value={partialPeriod}
+          onChange={setPartialPeriod}
+        />
+        <PeriodPicker
+          legend="Année sans donnée (URL ancienne)"
+          years={mockExplorerYears}
+          value={noDataPeriod}
+          onChange={setNoDataPeriod}
+        />
+        <PeriodPicker
+          legend="Année unique interdite (évolution)"
+          years={mockExplorerYears}
+          value={strictPeriod}
+          onChange={setStrictPeriod}
+          allowSingleYear={false}
+        />
+        <PeriodPicker
+          legend="Désactivé"
+          years={mockExplorerYears}
+          value={{ start: 2019, end: 2024 }}
+          onChange={() => {}}
+          disabled
+        />
+      </DemoSection>
     </main>
   );
 }
