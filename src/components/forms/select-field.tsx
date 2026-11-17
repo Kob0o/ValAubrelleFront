@@ -47,7 +47,7 @@ export type SelectFieldProps = {
   /** Liste filtrable par saisie (Command + Popover), pour les longues listes. */
   searchable?: boolean;
   error?: string;
-  /** Consigne qui doit rester lisible après le choix : toujours ici, pas dans `placeholder`. */
+  /** Consigne du champ, dans l'infobulle de l'icône d'information : toujours ici, pas dans `placeholder`. */
   hint?: string;
   required?: boolean;
   disabled?: boolean;
@@ -86,10 +86,11 @@ export function SelectField({
       required={required}
       className={className}
     >
-      {(control) =>
+      {(control, layout) =>
         searchable ? (
           <SearchableSelect
             control={control}
+            triggerClassName={layout.trailingPaddingClassName}
             name={name}
             required={required}
             label={label}
@@ -108,7 +109,10 @@ export function SelectField({
             disabled={disabled}
             required={required}
           >
-            <SelectTrigger {...control} className="w-full">
+            <SelectTrigger
+              {...control}
+              className={cn("w-full", layout.trailingPaddingClassName)}
+            >
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent
@@ -141,6 +145,7 @@ export function SelectField({
 
 type SearchableSelectProps = {
   control: FieldControlProps;
+  triggerClassName?: string;
   name?: string;
   required: boolean;
   label: string;
@@ -158,6 +163,7 @@ type SearchableSelectProps = {
  */
 function SearchableSelect({
   control,
+  triggerClassName,
   name,
   required,
   label,
@@ -195,7 +201,7 @@ function SearchableSelect({
             data-size="default"
             data-placeholder={selected ? undefined : ""}
             onKeyDown={handleTriggerKeyDown}
-            className={cn(selectTriggerClassName, "w-full")}
+            className={cn(selectTriggerClassName, "w-full", triggerClassName)}
           >
             <span className="truncate">{selected?.label ?? placeholder}</span>
             <ChevronDown

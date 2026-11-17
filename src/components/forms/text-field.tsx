@@ -1,8 +1,13 @@
 "use client";
 
-import type { ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { cn } from "cn";
 
-import { FieldWrapper } from "@/components/forms/field-wrapper";
+import {
+  FieldWrapper,
+  fieldIconButtonClassName,
+} from "@/components/forms/field-wrapper";
 import { Input } from "@/components/ui/input";
 
 type NativeInputProps = Omit<
@@ -23,12 +28,14 @@ export type TextFieldProps = NativeInputProps & {
   name: string;
   value: string;
   onChange: (value: string) => void;
+  /** `password` ajoute un bouton pour afficher ou masquer la saisie. */
   type?: "text" | "email" | "password";
   /** Message d'erreur, par ex. `getFieldError(apiError, name)` sur un 422. */
   error?: string;
   /**
-   * Aide : consigne qui doit rester lisible pendant la saisie (format,
-   * contrainte, précision). Toujours ici, jamais dans `placeholder`.
+   * Aide : consigne qui doit rester accessible pendant la saisie (format,
+   * contrainte, précision), affichée dans l'infobulle de l'icône d'information.
+   * Toujours ici, jamais dans `placeholder`.
    */
   hint?: string;
   /**
@@ -62,6 +69,9 @@ export function TextField({
   className,
   ...inputProps
 }: TextFieldProps) {
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const isPassword = type === "password";
+
   const counter =
     showCounter && maxLength !== undefined
       ? `${value.length} / ${maxLength} caractères`
@@ -75,20 +85,38 @@ export function TextField({
       error={error}
       required={required}
       footer={counter}
+      trailing={
+        isPassword ? (
+          <button
+            type="button"
+            aria-label="Afficher le mot de passe"
+            aria-pressed={passwordVisible}
+            disabled={disabled}
+            onClick={() => setPasswordVisible((visible) => !visible)}
+            className={fieldIconButtonClassName}
+          >
+            {passwordVisible ? (
+              <EyeOff aria-hidden="true" />
+            ) : (
+              <Eye aria-hidden="true" />
+            )}
+          </button>
+        ) : undefined
+      }
     >
-      {(control) => (
+      {(control, layout) => (
         <Input
           {...inputProps}
           {...control}
           name={name}
-          type={type}
+          type={isPassword && passwordVisible ? "text" : type}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           required={required}
           maxLength={maxLength}
           disabled={disabled}
           readOnly={readOnly}
-          className={className}
+          className={cn(layout.trailingPaddingClassName, className)}
         />
       )}
     </FieldWrapper>

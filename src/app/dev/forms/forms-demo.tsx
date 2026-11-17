@@ -62,6 +62,9 @@ export function FormsDemo() {
   const [summary, setSummary] = useState("Logements vacants en centre-bourg");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const passwordMismatch =
+    passwordConfirmation !== "" && passwordConfirmation !== password;
 
   const [role, setRole] = useState<string>();
   const [selectedRole, setSelectedRole] = useState("housing_officer");
@@ -92,8 +95,9 @@ export function FormsDemo() {
           les flèches pour ouvrir une liste, Échap pour la fermer.
         </p>
         <p className="text-base text-muted-foreground">
-          Les champs marqués d’un astérisque (*) sont obligatoires. Toutes les
-          données affichées sont fictives.
+          Les champs obligatoires portent le badge « Obligatoire ». L’aide
+          d’un champ s’affiche au survol, au focus ou au toucher de son icône
+          d’information. Toutes les données affichées sont fictives.
         </p>
       </header>
 
@@ -166,10 +170,25 @@ export function FormsDemo() {
           label="Mot de passe"
           name="password"
           type="password"
-          autoComplete="current-password"
+          autoComplete="new-password"
           value={password}
           onChange={setPassword}
           required
+          hint="12 caractères minimum (règle fictive de démonstration)."
+        />
+        <TextField
+          label="Confirmer le mot de passe"
+          name="password-confirmation"
+          type="password"
+          autoComplete="new-password"
+          value={passwordConfirmation}
+          onChange={setPasswordConfirmation}
+          required
+          error={
+            passwordMismatch
+              ? "Les deux mots de passe ne correspondent pas."
+              : undefined
+          }
         />
       </DemoSection>
 

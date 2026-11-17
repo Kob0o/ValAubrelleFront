@@ -91,7 +91,7 @@ describe.each([
       />,
     );
 
-    const trigger = screen.getByRole("combobox", { name: /Rôle.*obligatoire/ });
+    const trigger = screen.getByRole("combobox", { name: "Rôle Obligatoire" });
     expect(trigger).toHaveAttribute("aria-invalid", "true");
     expect(trigger).toHaveAccessibleDescription(
       "Rôle du compte. Erreur : Choisissez un rôle.",

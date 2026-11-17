@@ -1,8 +1,17 @@
-import { useId, type ReactNode } from "react";
-import { CircleAlert } from "lucide-react";
+"use client";
+
+import { useId, useState, type ReactNode } from "react";
+import { CircleAlert, Info } from "lucide-react";
 import { cn } from "cn";
 
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /** Attributs à poser sur le contrôle pour le relier au libellé, à l'aide et à l'erreur. */
 export type FieldControlProps = {
@@ -12,12 +21,19 @@ export type FieldControlProps = {
   "aria-required"?: true;
 };
 
+/** Mise en page du contrôle selon les boutons placés à sa droite. */
+export type FieldLayout = {
+  /** Marge droite à ajouter au contrôle pour que le texte ne passe pas sous les boutons. */
+  trailingPaddingClassName?: string;
+};
+
 export type FieldWrapperProps = {
   label: string;
   /** Identifiant du contrôle ; généré si absent. */
   id?: string;
   /**
-   * Consigne affichée sous le libellé et annoncée avec le champ.
+   * Consigne du champ, affichée dans une infobulle (icône d'information à
+   * droite du champ) et annoncée avec le champ par les lecteurs d'écran.
    * Règle : la consigne va ici ; le placeholder ne porte qu'un exemple de valeur.
    */
   hint?: string;
@@ -25,9 +41,21 @@ export type FieldWrapperProps = {
   required?: boolean;
   /** Texte affiché sous le champ et lu avec lui (compteur de caractères…). */
   footer?: string;
+  /** Bouton placé dans le champ, avant l'aide (afficher le mot de passe…). */
+  trailing?: ReactNode;
   className?: string;
-  children: (control: FieldControlProps) => ReactNode;
+  children: (control: FieldControlProps, layout: FieldLayout) => ReactNode;
 };
+
+/**
+ * Bouton icône placé dans un champ : cible 44 × 44 px, icône 16 px,
+ * focus visible à l'intérieur du champ.
+ */
+export const fieldIconButtonClassName =
+  "flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:cursor-not-allowed disabled:hover:text-muted-foreground [&_svg]:size-4";
+
+/** Marges droites littérales (Tailwind ne détecte pas les classes construites). */
+const TRAILING_PADDING = ["", "pr-12", "pr-23"] as const;
 
 /**
  * Libellé + aide + erreur partagés par TextField, Select et les futurs champs
@@ -42,6 +70,7 @@ export function FieldWrapper({
   error,
   required = false,
   footer,
+  trailing,
   className,
   children,
 }: FieldWrapperProps) {
@@ -56,34 +85,46 @@ export function FieldWrapper({
       .filter(Boolean)
       .join(" ") || undefined;
 
+  const trailingCount = (trailing ? 1 : 0) + (hint ? 1 : 0);
+
   return (
     <div className={cn("flex flex-col gap-2", className)} data-slot="field">
-      <Label htmlFor={controlId} className="flex-wrap gap-1">
+      <Label htmlFor={controlId} className="flex-wrap gap-2">
         {label}
-        {required ? (
-          <span className="font-normal text-muted-foreground">
-            <span aria-hidden="true">* </span>(obligatoire)
-          </span>
-        ) : null}
+        {required ? <Badge variant="secondary">Obligatoire</Badge> : null}
       </Label>
 
+      {/* Texte de l'aide pour les lecteurs d'écran, lu avec le champ. */}
       {hint ? (
-        <p id={hintId} className="text-base text-muted-foreground">
+        <p id={hintId} className="sr-only">
           {hint}
         </p>
       ) : null}
 
-      {children({
-        id: controlId,
-        "aria-describedby": describedBy,
-        "aria-invalid": error ? true : undefined,
-        "aria-required": required ? true : undefined,
-      })}
+      <div className="relative">
+        {children(
+          {
+            id: controlId,
+            "aria-describedby": describedBy,
+            "aria-invalid": error ? true : undefined,
+            "aria-required": required ? true : undefined,
+          },
+          { trailingPaddingClassName: TRAILING_PADDING[trailingCount] || undefined },
+        )}
+        {trailingCount > 0 ? (
+          <div className="absolute inset-y-0 right-0 flex items-center">
+            {trailing}
+            {hint ? <FieldHint label={label} hint={hint} /> : null}
+          </div>
+        ) : null}
+      </div>
 
       {error ? (
         <p id={errorId} className="flex items-start gap-2 text-base text-destructive">
-          {/* Icône 16 px centrée sur la 1re ligne (interligne 24 px). */}
-          <CircleAlert aria-hidden="true" className="mt-1 size-4 shrink-0" />
+          {/* Case de la hauteur d'une ligne : l'icône reste alignée sur la 1re ligne. */}
+          <span className="flex h-[1lh] shrink-0 items-center">
+            <CircleAlert aria-hidden="true" className="size-4" />
+          </span>
           <span>
             <span className="sr-only">Erreur : </span>
             {error}
@@ -97,5 +138,37 @@ export function FieldWrapper({
         </p>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Icône d'information : l'aide s'affiche au survol, au focus clavier et au
+ * toucher (clic), se ferme avec Échap ou en cliquant ailleurs.
+ */
+function FieldHint({ label, hint }: { label: string; hint: string }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <TooltipProvider>
+      <Tooltip open={open} onOpenChange={setOpen}>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            aria-label={`Aide : ${label}`}
+            onClick={(event) => {
+              // Garde l'infobulle ouverte au clic (Radix la fermerait), utile au toucher.
+              event.preventDefault();
+              setOpen(true);
+            }}
+            className={fieldIconButtonClassName}
+          >
+            <Info aria-hidden="true" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" align="end" sideOffset={4}>
+          {hint}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

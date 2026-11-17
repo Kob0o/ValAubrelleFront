@@ -19,6 +19,9 @@ describe("contraste des champs de formulaire (variables du thème)", () => {
     ["texte désactivé (--muted-foreground) sur --muted", "--muted-foreground", "--muted"],
     ["texte lecture seule (--foreground) sur --muted", "--foreground", "--muted"],
     ["option active (--accent-foreground) sur --accent", "--accent-foreground", "--accent"],
+    ["badge « Obligatoire » (--secondary-foreground) sur --secondary", "--secondary-foreground", "--secondary"],
+    ["infobulle d'aide (--background) sur --foreground", "--background", "--foreground"],
+    ["icône d'aide et œil (--muted-foreground) sur --muted", "--muted-foreground", "--muted"],
   ])("%s atteint 4,5:1", (_name, foreground, background) => {
     expect(contrastRatio(v(foreground), v(background))).toBeGreaterThanOrEqual(
       TEXT_CONTRAST_MINIMUM,

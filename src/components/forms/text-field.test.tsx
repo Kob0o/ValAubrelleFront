@@ -32,13 +32,38 @@ describe("TextField", () => {
     expect(screen.getByText("Nom")).toBeVisible();
   });
 
-  it("annonce « obligatoire » en texte, pas seulement par l'astérisque", () => {
+  it("signale un champ obligatoire par un badge texte inclus dans le libellé", () => {
     render(<ControlledField required />);
 
-    const input = screen.getByRole("textbox", { name: /Nom.*obligatoire/ });
+    const input = screen.getByRole("textbox", { name: "Nom Obligatoire" });
     expect(input).toBeRequired();
     expect(input).toHaveAttribute("aria-required", "true");
-    expect(screen.getByText("*")).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getByText("Obligatoire")).toBeVisible();
+    expect(screen.queryByText("*")).not.toBeInTheDocument();
+  });
+
+  it("affiche l'aide dans une infobulle au survol, au clavier et au clic", async () => {
+    const user = userEvent.setup();
+    render(<ControlledField hint="Tel qu'il figure sur le mandat." />);
+
+    const help = screen.getByRole("button", { name: "Aide : Nom" });
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+
+    await user.hover(help);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Tel qu'il figure sur le mandat.",
+    );
+    await user.unhover(help);
+
+    await user.tab();
+    await user.tab();
+    expect(help).toHaveFocus();
+    expect(await screen.findByRole("tooltip")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+
+    await user.click(help);
+    expect(await screen.findByRole("tooltip")).toBeInTheDocument();
   });
 
   it("relie l'aide et l'erreur par aria-describedby et marque le champ invalide", () => {
@@ -55,6 +80,23 @@ describe("TextField", () => {
       "Tel qu'il figure sur le mandat. Erreur : Le nom est obligatoire.",
     );
     expect(screen.getByText("Le nom est obligatoire.")).toBeVisible();
+  });
+
+  it("affiche et masque le mot de passe avec le bouton œil", async () => {
+    const user = userEvent.setup();
+    render(<ControlledField label="Mot de passe" type="password" value="secret" />);
+
+    const input = screen.getByLabelText("Mot de passe");
+    const toggle = screen.getByRole("button", { name: "Afficher le mot de passe" });
+    expect(input).toHaveAttribute("type", "password");
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(toggle);
+    expect(input).toHaveAttribute("type", "text");
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(toggle);
+    expect(input).toHaveAttribute("type", "password");
   });
 
   it("transmet la valeur saisie et met à jour le compteur", async () => {
