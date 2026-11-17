@@ -31,7 +31,21 @@ const columns: DataTableColumn<IndicatorValue>[] = [
     accessorKey: "value",
     header: "Prix au m²",
     meta: { numeric: true, sortable: true, sortField: "value" },
-    cell: (info) => `${Number(info.getValue()).toLocaleString("fr-FR")} €/m²`,
+    cell: (info) => {
+      const value = info.getValue();
+      // Une cell personnalisée reçoit null et décide de son rendu :
+      // jamais « 0 €/m² » pour une donnée non disponible.
+      return value === null || value === undefined ? (
+        <>
+          <span aria-hidden="true" className="text-muted-foreground">
+            —
+          </span>
+          <span className="sr-only">Donnée non disponible</span>
+        </>
+      ) : (
+        `${Number(value).toLocaleString("fr-FR")} €/m²`
+      );
+    },
   },
   {
     accessorKey: "sampleSize",

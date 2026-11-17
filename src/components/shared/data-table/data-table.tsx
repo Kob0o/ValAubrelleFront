@@ -34,17 +34,14 @@ const features = tableFeatures({
 
 export type DataTableFeatures = typeof features;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyRow = Record<string, any>;
-
-export type DataTableColumn<TData extends AnyRow> = ColumnDef<
+export type DataTableColumn<TData extends object> = ColumnDef<
   DataTableFeatures,
   TData,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any
 >;
 
-export interface DataTableProps<TData extends AnyRow> {
+export interface DataTableProps<TData extends object> {
   /** Définitions de colonnes (pattern shadcn + @tanstack/react-table). */
   columns: DataTableColumn<TData>[];
   /** Lignes déjà triées/filtrées côté serveur. */
@@ -75,7 +72,7 @@ export interface DataTableProps<TData extends AnyRow> {
  * Charte : en-têtes Inter SemiBold Anthracite, survol Brume, ligne
  * sélectionnée marquée au Vert Aubrelle — jamais par la couleur seule.
  */
-export function DataTable<TData extends AnyRow>({
+export function DataTable<TData extends object>({
   columns,
   rows,
   caption,
@@ -88,12 +85,34 @@ export function DataTable<TData extends AnyRow>({
   selectedId = null,
   getRowId,
 }: DataTableProps<TData>) {
-  const table = useTable({ features, columns, data: rows });
+  const table = useTable({
+    features,
+    columns,
+    data: rows,
+    defaultColumn: {
+      // Repli par défaut : une valeur null n'est jamais affichée 0.
+      // Une colonne avec une cell propre (actions, QualityValue…) prime
+      // sur ce défaut et reçoit la valeur, y compris null.
+      cell: (info) => {
+        const value = info.getValue();
+        return value === null || value === undefined || value === "" ? (
+          <>
+            <span aria-hidden="true" className="text-muted-foreground">
+              —
+            </span>
+            <span className="sr-only">Donnée non disponible</span>
+          </>
+        ) : (
+          String(value)
+        );
+      },
+    },
+  });
 
   if (loading) {
     return (
       <div role="status" aria-busy="true" className="space-y-2">
-        <span className="sr-only">Chargement des données…</span>
+        <span className="sr-only">Chargement des données… {caption}</span>
         <Skeleton className="h-11 w-full" />
         {Array.from({ length: 4 }, (_, index) => (
           <Skeleton key={index} className="h-12 w-full" />
@@ -106,6 +125,7 @@ export function DataTable<TData extends AnyRow>({
     return (
       <div
         role="alert"
+        aria-label={caption}
         className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-6 text-center text-sm text-destructive"
       >
         {error}
@@ -114,13 +134,20 @@ export function DataTable<TData extends AnyRow>({
   }
 
   if (empty ?? rows.length === 0) {
-    return <EmptyState />;
+    return <EmptyState aria-label={caption} />;
   }
 
   const resolveRowId = (row: TData): string | number | undefined =>
     getRowId ? getRowId(row) : (row as { id?: string | number }).id;
 
   const clickable = Boolean(onRowClick);
+
+  /** Un clic clavier/souris né dans un élément interactif (lien, bouton…) ne déclenche pas la ligne. */
+  const isInteractiveTarget = (target: EventTarget | null): boolean =>
+    target instanceof HTMLElement &&
+    Boolean(
+      target.closest("button, a, input, select, textarea, [role='button']"),
+    );
 
   return (
     <Table>
@@ -215,12 +242,26 @@ export function DataTable<TData extends AnyRow>({
             <TableRow
               key={row.id}
               data-state={isSelected ? "selected" : undefined}
-              aria-selected={clickable ? isSelected : undefined}
+              aria-selected={
+                clickable || selectedId != null ? isSelected : undefined
+              }
               tabIndex={clickable ? 0 : undefined}
-              onClick={clickable ? () => onRowClick?.(original) : undefined}
+              onClick={
+                clickable
+                  ? (event) => {
+                      if (isInteractiveTarget(event.target)) {
+                        return;
+                      }
+                      onRowClick?.(original);
+                    }
+                  : undefined
+              }
               onKeyDown={
                 clickable
                   ? (event) => {
+                      if (event.target !== event.currentTarget) {
+                        return;
+                      }
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
                         onRowClick?.(original);
@@ -237,10 +278,7 @@ export function DataTable<TData extends AnyRow>({
               )}
             >
               {row.getAllCells().map((cell) => {
-                const value = cell.getValue();
                 const numeric = Boolean(cell.column.columnDef.meta?.numeric);
-                const isMissing =
-                  value === null || value === undefined || value === "";
 
                 return (
                   <TableCell
@@ -250,12 +288,7 @@ export function DataTable<TData extends AnyRow>({
                       numeric && "text-right tabular-nums",
                     )}
                   >
-                    {isMissing ? (
-                      // Une valeur null n'est jamais affichée 0.
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      <table.FlexRender cell={cell} />
-                    )}
+                    <table.FlexRender cell={cell} />
                   </TableCell>
                 );
               })}

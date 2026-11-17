@@ -252,6 +252,78 @@ describe("DataTable — lignes cliquables et sélection", () => {
     expect(other).toHaveAttribute("aria-selected", "false");
     expect(other).not.toHaveAttribute("data-state");
   });
+
+  it("pose aria-selected même sans onRowClick quand selectedId est défini", () => {
+    renderDataTable({ getRowId, selectedId: "59252" });
+
+    expect(screen.getByRole("row", { name: /59252/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("row", { name: /59230/ })).toHaveAttribute(
+      "aria-selected",
+      "false",
+    );
+  });
+});
+
+describe("DataTable — colonnes personnalisées", () => {
+  const columnsWithActions: DataTableColumn<IndicatorValue>[] = [
+    { accessorKey: "placeId", header: "Commune (code INSEE)" },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: () => <button type="button">Voir</button>,
+    },
+  ];
+
+  it("rend une colonne d'affichage sans accesseur, jamais « — »", () => {
+    renderDataTable({ columns: columnsWithActions });
+
+    expect(
+      screen.getAllByRole("button", { name: "Voir" }),
+    ).toHaveLength(mockIndicatorValues.length);
+    expect(screen.queryByText("—")).not.toBeInTheDocument();
+  });
+
+  it("laisse une cell personnalisée recevoir null et décider du rendu", () => {
+    const columnsWithNullCell: DataTableColumn<IndicatorValue>[] = [
+      { accessorKey: "placeId", header: "Commune (code INSEE)" },
+      {
+        accessorKey: "value",
+        header: "Valeur",
+        cell: (info) =>
+          info.getValue() === null || info.getValue() === undefined
+            ? "Non diffusé"
+            : String(info.getValue()),
+      },
+    ];
+    renderDataTable({ columns: columnsWithNullCell });
+
+    // Statut « missing » (59253) : la cell reçoit null et affiche son libellé.
+    const missingRow = screen.getByRole("row", { name: /59253/ });
+    expect(missingRow).toHaveTextContent("Non diffusé");
+    expect(missingRow).not.toHaveTextContent("—");
+  });
+
+  it("n'intercepte ni clavier ni clic venant d'un élément interactif en cellule", () => {
+    const onRowClick = vi.fn();
+    renderDataTable({
+      columns: columnsWithActions,
+      onRowClick,
+      getRowId: (row) => row.placeId,
+    });
+
+    const actionButton = screen.getAllByRole("button", { name: "Voir" })[0];
+    fireEvent.keyDown(actionButton, { key: "Enter" });
+    fireEvent.keyDown(actionButton, { key: " " });
+    fireEvent.click(actionButton);
+    expect(onRowClick).not.toHaveBeenCalled();
+
+    // Le clic sur une cellule ordinaire déclenche toujours la ligne.
+    fireEvent.click(screen.getByText("59230"));
+    expect(onRowClick).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("DataTable — helpers du contrat de tri", () => {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { DataTableDemo } from "./data-table-demo";
 
@@ -9,6 +10,15 @@ export const metadata: Metadata = {
 };
 
 export default function DataTableDemoPage() {
+  // Page de démo : 404 en production, sauf build explicite avec
+  // ENABLE_DEV_PAGES=true (convention des pages /dev de l'équipe).
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.ENABLE_DEV_PAGES !== "true"
+  ) {
+    notFound();
+  }
+
   return (
     <main
       id="contenu"
