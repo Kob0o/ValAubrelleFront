@@ -8,6 +8,8 @@ import {
   type DataTableColumn,
   type SortState,
 } from "@/components/shared/data-table";
+import { QualityValue } from "@/components/shared/quality-value";
+import { compareIndicatorValues } from "@/lib/compare-indicator-values";
 import { mockMunicipalities } from "@/mocks/municipalities";
 import { mockIndicatorValues } from "@/mocks/quality-status";
 import type { IndicatorValue } from "@/types/domain";
@@ -31,21 +33,9 @@ const columns: DataTableColumn<IndicatorValue>[] = [
     accessorKey: "value",
     header: "Prix au m²",
     meta: { numeric: true, sortable: true, sortField: "value" },
-    cell: (info) => {
-      const value = info.getValue();
-      // Une cell personnalisée reçoit null et décide de son rendu :
-      // jamais « 0 €/m² » pour une donnée non disponible.
-      return value === null || value === undefined ? (
-        <>
-          <span aria-hidden="true" className="text-muted-foreground">
-            —
-          </span>
-          <span className="sr-only">Donnée non disponible</span>
-        </>
-      ) : (
-        `${Number(value).toLocaleString("fr-FR")} €/m²`
-      );
-    },
+    cell: (info) => (
+      <QualityValue value={info.row.original} unit="€/m²" />
+    ),
   },
   {
     accessorKey: "sampleSize",
@@ -71,6 +61,11 @@ export function DataTableDemo() {
   const sortedRows = useMemo(() => {
     if (!sort) {
       return mockIndicatorValues;
+    }
+    if (sort.field === "value") {
+      return [...mockIndicatorValues].sort((a, b) =>
+        compareIndicatorValues(a, b, sort.direction),
+      );
     }
     const sortValue = (row: IndicatorValue): string | number | null =>
       sort.field === "commune"
