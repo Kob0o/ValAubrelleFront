@@ -21,9 +21,9 @@ const buttonVariants = cva(
         link: "h-auto min-h-0 rounded-none border-0 bg-transparent px-0 text-primary underline underline-offset-4 hover:text-[color-mix(in_srgb,var(--primary),#000_16%)]",
       },
       size: {
-        sm: "min-h-11 min-w-11 px-3 py-2 text-base",
-        md: "min-h-11 min-w-11 px-4 py-2.5 text-base",
-        lg: "min-h-12 min-w-12 px-5 py-3 text-base",
+        sm: "h-11 min-h-11 min-w-11 px-3 text-base",
+        md: "h-11 min-h-11 min-w-11 px-4 text-base",
+        lg: "h-11 min-h-11 min-w-11 px-6 text-base",
         icon: "size-11 min-h-11 min-w-11 p-0",
       },
     },
