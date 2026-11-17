@@ -8,9 +8,11 @@ import { axeViolations } from "@/test/axe";
 function ModalHarness({
   onClose = vi.fn(),
   size,
+  busy = false,
 }: {
   onClose?: () => void;
   size?: "sm" | "md" | "lg";
+  busy?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -31,6 +33,7 @@ function ModalHarness({
         title="Modifier la commune"
         description="Les changements sont enregistrés à la validation."
         size={size}
+        busy={busy}
         footer={<button>Enregistrer</button>}
       >
         <p>Contenu de la fenêtre.</p>
@@ -99,6 +102,26 @@ describe("Modal", () => {
     render(<ModalHarness size="lg" />);
     fireEvent.click(screen.getByRole("button", { name: "Ouvrir la fenêtre" }));
     expect(screen.getByRole("dialog")).toHaveClass("sm:max-w-2xl");
+  });
+
+  it("en busy, Échap et le clic dehors ne ferment pas, Fermer est désactivé", () => {
+    const onClose = vi.fn();
+    render(<ModalHarness busy onClose={onClose} />);
+    fireEvent.click(screen.getByRole("button", { name: "Ouvrir la fenêtre" }));
+
+    expect(screen.getByRole("button", { name: "Fermer" })).toBeDisabled();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+
+    const overlay = document.querySelector(
+      "[data-slot='dialog-overlay']",
+    ) as HTMLElement;
+    fireEvent.pointerDown(overlay);
+    fireEvent.click(overlay);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("sans description, aria-describedby n'est pas posé", () => {

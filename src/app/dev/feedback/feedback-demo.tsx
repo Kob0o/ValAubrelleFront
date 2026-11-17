@@ -8,7 +8,7 @@ import { ConfirmDialog, useConfirm } from "@/components/shared/confirm-dialog";
 import { Drawer } from "@/components/shared/drawer";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Modal } from "@/components/shared/modal";
-import { Skeleton } from "@/components/shared/skeleton";
+import { LoadingRegion, Skeleton } from "@/components/shared/skeleton";
 import { Button } from "@/components/ui/button";
 import { useFeedback } from "@/hooks/use-feedback";
 import { buildApiError } from "@/lib/api/errors";
@@ -42,6 +42,7 @@ export function FeedbackDemo() {
   const [bannerVisible, setBannerVisible] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSize, setModalSize] = useState<"sm" | "md" | "lg">("md");
+  const [busyModalOpen, setBusyModalOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [controlledOpen, setControlledOpen] = useState(false);
   const [controlledBusy, setControlledBusy] = useState(false);
@@ -140,6 +141,9 @@ export function FeedbackDemo() {
               Ouvrir ({size})
             </Button>
           ))}
+          <Button variant="outline" onClick={() => setBusyModalOpen(true)}>
+            Ouvrir (confirmation en cours)
+          </Button>
         </div>
         <Modal
           open={modalOpen}
@@ -167,6 +171,24 @@ export function FeedbackDemo() {
             À 390 px, la fenêtre occupe tout l’écran. Sur bureau, la largeur
             dépend de la prop <code>size</code>. Le contenu long défile à
             l’intérieur de la fenêtre.
+          </p>
+        </Modal>
+
+        <Modal
+          open={busyModalOpen}
+          onClose={() => setBusyModalOpen(false)}
+          title="Enregistrement en cours"
+          description="Pendant une confirmation, la fenêtre ne peut pas être fermée."
+          busy
+          footer={
+            <Button variant="primary" disabled aria-busy="true">
+              Enregistrement…
+            </Button>
+          }
+        >
+          <p>
+            Tant que la prop <code>busy</code> est active, Échap, le clic sur
+            l’arrière-plan et le bouton « Fermer » sont sans effet.
           </p>
         </Modal>
       </DemoSection>
@@ -199,7 +221,9 @@ export function FeedbackDemo() {
         <div className="grid gap-6 sm:grid-cols-3">
           <div className="flex flex-col gap-2">
             <p className="text-sm font-semibold">shape=&quot;line&quot; (3 lignes)</p>
-            <Skeleton shape="line" lines={3} />
+            <LoadingRegion label="Chargement des indicateurs…">
+              <Skeleton shape="line" lines={3} />
+            </LoadingRegion>
           </div>
           <div className="flex flex-col gap-2">
             <p className="text-sm font-semibold">shape=&quot;block&quot;</p>

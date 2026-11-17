@@ -9,6 +9,7 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { ConfirmDialog, useConfirm } from "@/components/shared/confirm-dialog";
+import { buildApiError, errorMessages } from "@/lib/api/errors";
 import { axeViolations } from "@/test/axe";
 
 describe("ConfirmDialog (contrôlé)", () => {
@@ -97,14 +98,54 @@ describe("ConfirmDialog (contrôlé)", () => {
     expect(onConfirm).toHaveBeenCalledOnce();
   });
 
-  it("Échap annule et ferme le dialogue", () => {
+  it("place le focus dans le dialogue à l'ouverture", () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "Ouvrir" }));
+
+    const dialog = screen.getByRole("alertdialog");
+    expect(dialog.contains(document.activeElement)).toBe(true);
+  });
+
+  it("tone='danger' : le focus initial est sur « Annuler »", () => {
+    render(<Harness tone="danger" />);
+    fireEvent.click(screen.getByRole("button", { name: "Ouvrir" }));
+
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Annuler" }),
+    );
+  });
+
+  it("le focus reste piégé dans le dialogue au clavier", () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "Ouvrir" }));
+
+    const dialog = screen.getByRole("alertdialog");
+    for (let index = 0; index < 6; index += 1) {
+      fireEvent.keyDown(document.activeElement!, { key: "Tab" });
+      expect(dialog.contains(document.activeElement)).toBe(true);
+    }
+    for (let index = 0; index < 6; index += 1) {
+      fireEvent.keyDown(document.activeElement!, {
+        key: "Tab",
+        shiftKey: true,
+      });
+      expect(dialog.contains(document.activeElement)).toBe(true);
+    }
+  });
+
+  it("Échap annule, ferme le dialogue et rend le focus au déclencheur", async () => {
     const onCancel = vi.fn();
     render(<Harness onCancel={onCancel} />);
-    fireEvent.click(screen.getByRole("button", { name: "Ouvrir" }));
+    const trigger = screen.getByRole("button", { name: "Ouvrir" });
+    trigger.focus();
+    fireEvent.click(trigger);
 
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onCancel).toHaveBeenCalledOnce();
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(document.activeElement).toBe(trigger);
+    });
   });
 
   it("en busy, Échap et Annuler sont bloqués et le bouton signale l'état", () => {
@@ -223,5 +264,26 @@ describe("useConfirm", () => {
       fireEvent.click(screen.getByRole("button", { name: "Annuler" }));
     });
     await waitFor(() => expect(onResult).toHaveBeenCalledWith(false));
+  });
+
+  it("une ApiError normalisée garde son message métier", async () => {
+    const onConfirm = vi.fn().mockRejectedValue(
+      buildApiError({ httpStatus: 409, body: { code: "VERSION_CONFLICT" } }),
+    );
+    const onResult = vi.fn();
+    render(<HookHarness onConfirm={onConfirm} onResult={onResult} />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Demander confirmation" }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Supprimer le brouillon" }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      errorMessages.VERSION_CONFLICT,
+    );
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    expect(onResult).not.toHaveBeenCalled();
   });
 });

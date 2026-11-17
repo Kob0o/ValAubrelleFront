@@ -18,6 +18,35 @@ const shapeClasses = {
   cell: "h-11 w-full",
 } as const;
 
+export interface LoadingRegionProps extends ComponentProps<"div"> {
+  /** Texte annoncé par le lecteur d'écran pendant le chargement. */
+  label?: string;
+}
+
+/**
+ * Zone de chargement annoncée au lecteur d'écran : `role="status"` +
+ * `aria-busy` et texte masqué « Chargement… ». Envelopper les Skeleton
+ * (eux-mêmes décoratifs) dans cette région.
+ */
+export function LoadingRegion({
+  label = "Chargement…",
+  className,
+  children,
+  ...props
+}: LoadingRegionProps) {
+  return (
+    <div
+      role="status"
+      aria-busy="true"
+      className={className}
+      {...props}
+    >
+      <span className="sr-only">{label}</span>
+      {children}
+    </div>
+  );
+}
+
 /**
  * Squelette de chargement décoratif.
  * La zone parente porte `aria-busy="true"` et un texte masqué

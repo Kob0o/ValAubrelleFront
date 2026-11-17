@@ -30,6 +30,11 @@ export interface ModalProps {
   footer?: ReactNode;
   /** Largeur sur bureau ; plein écran à 390 px dans tous les cas. */
   size?: "sm" | "md" | "lg";
+  /**
+   * Confirmation en cours : la fermeture est bloquée (Échap, clic sur
+   * l'overlay, bouton Fermer désactivé).
+   */
+  busy?: boolean;
 }
 
 const sizeClasses = {
@@ -51,6 +56,7 @@ export function Modal({
   children,
   footer,
   size = "md",
+  busy = false,
 }: ModalProps) {
   useRestoreFocus(open);
 
@@ -58,7 +64,7 @@ export function Modal({
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
-        if (!isOpen) {
+        if (!isOpen && !busy) {
           onClose();
         }
       }}
@@ -71,6 +77,16 @@ export function Modal({
           // Plein écran à 390 px
           "max-sm:top-0 max-sm:left-0 max-sm:h-dvh max-sm:max-h-none max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none",
         )}
+        onEscapeKeyDown={(event) => {
+          if (busy) {
+            event.preventDefault();
+          }
+        }}
+        onPointerDownOutside={(event) => {
+          if (busy) {
+            event.preventDefault();
+          }
+        }}
         {...(description ? {} : { "aria-describedby": undefined })}
       >
         <div className="flex items-start justify-between gap-4">
@@ -85,7 +101,7 @@ export function Modal({
             ) : null}
           </DialogHeader>
           <DialogClose asChild>
-            <IconButton label="Fermer" className="-m-2 shrink-0">
+            <IconButton label="Fermer" className="-m-2 shrink-0" disabled={busy}>
               <X aria-hidden="true" className="size-4" />
             </IconButton>
           </DialogClose>

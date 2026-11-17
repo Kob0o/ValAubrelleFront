@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useRestoreFocus } from "@/hooks/use-restore-focus";
+import { isApiError } from "@/lib/api/errors";
 
 export type ConfirmTone = "default" | "danger";
 
@@ -92,7 +93,7 @@ export function ConfirmDialog({
               aria-hidden="true"
               className="mt-0.5 size-4 shrink-0 text-[var(--color-danger)]"
             />
-            <p className="text-sm text-[var(--color-danger)]">{error}</p>
+            <p className="text-base text-[var(--color-danger)]">{error}</p>
           </div>
         ) : null}
 
@@ -186,11 +187,14 @@ export function useConfirm(): {
     try {
       await state?.onConfirm();
       settle(true);
-    } catch {
+    } catch (caught) {
+      // Une ApiError normalisée garde son message métier ; sinon, repli générique.
+      const message =
+        isApiError(caught) && caught.message
+          ? caught.message
+          : CONFIRM_ERROR_MESSAGE;
       setState((current) =>
-        current
-          ? { ...current, busy: false, error: CONFIRM_ERROR_MESSAGE }
-          : current,
+        current ? { ...current, busy: false, error: message } : current,
       );
     }
   }, [state, settle]);
