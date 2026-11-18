@@ -102,7 +102,7 @@ export function ExplorerPrototype({ dataSource = mockExplorerDataSource, user = 
               <p className={styles.dataNote}>{layer === "price" ? "Prix de vente moyen par mètre carré." : "Part des étiquettes F et G parmi les diagnostics disponibles."}</p>
             </section>}
             <section className={styles.listPanel} aria-labelledby="communes-heading"><div className={styles.listHeading}><h2 id="communes-heading">Les communes</h2><span className={styles.count}>{total}</span></div>
-              <label className={styles.search}><span>Rechercher une commune</span><span className={styles.searchField}><Search size={16} aria-hidden="true" /><Input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nom ou code postal…" /></span></label>
+              <label className={styles.search}><span>Rechercher une commune</span><span className={styles.searchField}><Search size={16} aria-hidden="true" /><Input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nom ou code INSEE…" /></span></label>
               {data && <p className={styles.resultCount} role="status">{filtered.length} commune{filtered.length > 1 ? "s" : ""} sur {total}</p>}
               {data ? <MunicipalityList municipalities={filtered} values={indicatorValues} classes={classes} layer={layer} selection={selection} onSelect={onSelect} onClearSearch={query ? () => setQuery("") : undefined} /> : <p role="status">{isLoading ? "Chargement des communes…" : "Les communes n’ont pas pu être chargées."}</p>}
             </section>

@@ -8,7 +8,7 @@ export function initialMunicipalityCode(user: Pick<ApiUser, "municipalityCodes">
 }
 
 export function explorerSearchParams(query: ExplorerQuery) {
-  if (!MUNICIPALITY_CODE_PATTERN.test(query.municipalityCode)) throw new Error("Code zip invalide.");
+  if (!MUNICIPALITY_CODE_PATTERN.test(query.municipalityCode)) throw new Error("Code INSEE invalide.");
   if (!query.referenceVersion.trim() || !query.indicatorId.trim()) throw new Error("Référence et indicateur obligatoires.");
   if (!["price", "dpe", "risk"].includes(query.layer)) throw new Error("Famille d’indicateur invalide.");
   if (![query.year, query.startYear, query.endYear].every(Number.isInteger) || query.startYear > query.year || query.year > query.endYear) throw new Error("Période invalide.");

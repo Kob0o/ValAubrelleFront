@@ -1,5 +1,5 @@
 import type { MultiPolygon, Polygon } from "geojson";
-import type { components } from "@/api-mock/generated/contract";
+import type { components } from "@/types/api";
 
 /** Modèles de présentation, construits depuis les DTO générés par l’adaptateur. */
 export type IndicatorFamily = Extract<components["schemas"]["IndicatorFamily"], "price" | "dpe">;
@@ -25,7 +25,7 @@ export type ValueClass = {
   isNoData: boolean;
 };
 
-/** Objet WGS84 explicite : GeoJSON utilise [lng, lat], Leaflet [lat, lng]. */
+/** Objet WGS84 explicite : GeoJSON et MapLibre utilisent [lng, lat]. */
 export type MapCenter = { lat: number; lng: number };
 
 export type MapError = { status: number; message: string; code?: string; correlationId?: string };

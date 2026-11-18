@@ -1,4 +1,4 @@
-import type { components, operations } from "@/api-mock/generated/contract";
+import type { components, operations } from "@/types/api";
 
 export type ExplorerQuery = operations["getExplorer"]["parameters"]["query"];
 export type ExplorerResponse = operations["getExplorer"]["responses"][200]["content"]["application/json"];

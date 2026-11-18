@@ -22,6 +22,10 @@ describe("branchement GET /explorer côté front", () => {
     expect(() => initialMunicipalityCode({ municipalityCodes: [] })).toThrow();
   });
 
+  it("nomme explicitement le code INSEE dans l’erreur de validation", () => {
+    expect(() => explorerSearchParams({ ...defaultExplorerQuery, municipalityCode: "invalide" })).toThrow("Code INSEE invalide.");
+  });
+
   it.each([
     { municipalityCode: "invalide" }, { referenceVersion: "" }, { indicatorId: "" },
     { startYear: 2027 }, { year: 2026.5 }, { lat: 91 }, { lng: -181 }, { zoom: NaN }, { selection: ["invalide"] },
@@ -71,11 +75,12 @@ describe("adaptateur API vers MapView", () => {
     expect(model.values.every((item) => item.municipalityCode === "59001")).toBe(true);
   });
 
-  it("transforme les géométries absentes/nulles sans retirer les communes de la liste", () => {
-    const data = response(); data.municipalities[0].geometry = null; delete data.municipalities[1].geometry;
+  it("transforme les géométries absentes du contrat en null dans le modèle de présentation", () => {
+    const data = response(); delete data.municipalities[0].geometry; delete data.municipalities[1].geometry;
     const model = toExplorerMapData(data, mockUser.municipalityCodes, 2026);
     expect(model.municipalities).toHaveLength(32);
     expect(drawableMunicipalities(model.municipalities)).toHaveLength(30);
+    expect(model.municipalities.slice(0, 2).every((item) => item.geometry === null)).toBe(true);
   });
 
   it.each<ApiIndicatorValue["status"]>(["missing", "insufficient_sample", "source_error", "not_computable"])("hachure le statut %s même si une valeur numérique incohérente est fournie", (status) => {
