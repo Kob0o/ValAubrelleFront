@@ -144,7 +144,7 @@ export default function HomePage() {
         <h2 id="action" className="text-2xl font-semibold text-[var(--color-primary-strong)]">
           Action principale
         </h2>
-        <Button type="button">Consulter l’observatoire</Button>
+        <Button asChild><a href="/explorer">Consulter l’observatoire</a></Button>
         <a
           className="inline-flex min-h-11 items-center text-base font-semibold text-[var(--color-primary)] underline-offset-4 hover:underline"
           href="#signature"

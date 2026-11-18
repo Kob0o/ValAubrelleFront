@@ -31,7 +31,7 @@ describe("CorrelationId", () => {
     expect(screen.getByText(/Référence de l'erreur/)).toBeInTheDocument();
     const code = screen.getByText(ID);
     expect(code.tagName).toBe("CODE");
-    expect(code).toHaveClass("font-mono", "select-all", "break-all");
+    expect(code).toHaveClass("font-sans", "select-all", "break-all");
   });
 
   it("ne présente aucune violation axe", async () => {

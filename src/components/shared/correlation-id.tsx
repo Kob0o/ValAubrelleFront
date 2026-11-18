@@ -47,7 +47,7 @@ function CorrelationId({
       <span className="flex flex-wrap items-center gap-2">
         <span>
           {label} :{" "}
-          <code className="font-mono break-all select-all">{id}</code>
+          <code className="font-sans break-all select-all">{id}</code>
         </span>
         <IconButton label="Copier la référence" variant="outline" onClick={copy}>
           {state === "copied" ? <CheckIcon aria-hidden /> : <CopyIcon aria-hidden />}

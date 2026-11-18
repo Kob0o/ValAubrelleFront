@@ -4,6 +4,9 @@ import { charter } from "@/theme/tokens";
 import { ACTIVE_THEME, getActiveTheme, themes } from "@/theme/themes";
 
 describe("thème actif", () => {
+  it("conserve les six références hexadécimales du PDF 2026", () => {
+    expect({ primary: charter.primary, primaryStrong: charter.primaryStrong, accent: charter.accent, surfaceAlt: charter.surfaceAlt, text: charter.text, textMuted: charter.textMuted }).toEqual({ primary: "#2E7D5B", primaryStrong: "#1F5C42", accent: "#8CC63F", surfaceAlt: "#F1F6F2", text: "#24302B", textMuted: "#5D6B64" });
+  });
   it("expose les six couleurs imposées par la charte", () => {
     const variables = getActiveTheme().cssVariables;
 

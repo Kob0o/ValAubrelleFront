@@ -64,14 +64,14 @@
   }
 }
 
-button[data-slot="button"] {
+[data-slot="button"] {
   min-height: 44px;
   min-width: 44px;
   font-size: 1rem;
   font-weight: 600;
 }
 
-button[data-slot="button"]:focus-visible,
+[data-slot="button"]:focus-visible,
 a:focus-visible,
 .skip-link:focus-visible {
   outline: 3px solid var(--color-primary-strong);
@@ -94,4 +94,24 @@ a:focus-visible,
 
 .skip-link:focus {
   transform: none;
+}
+
+/* La charte s’applique aussi aux textes et actions des notifications. */
+[data-sonner-toaster],
+[data-sonner-toaster] [data-sonner-toast],
+[data-sonner-toaster] [data-description] {
+  font-family: var(--font-inter), sans-serif;
+  font-size: 1rem;
+}
+
+[data-sonner-toaster] [data-title],
+[data-sonner-toaster] [data-button] {
+  font-weight: 600;
+}
+
+[data-sonner-toaster] [data-button],
+[data-sonner-toaster] [data-close-button] {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 1rem;
 }

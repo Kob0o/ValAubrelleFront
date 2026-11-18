@@ -1,0 +1,53 @@
+.wrapper { position: relative; display: flex; flex-direction: column; min-width: 0; height: 100%; isolation: isolate; background: var(--color-surface-alt); }
+.stage { position: relative; flex: 1; min-height: 620px; }
+.wrapper .canvas { position: absolute; inset: 0; width: 100%; height: 100%; background: transparent; font-family: inherit; font-size: 16px; z-index: 0; }
+.keyboardButton { width: 44px; height: 44px; padding: 0; border: 0; border-radius: var(--radius-sm); background: transparent; opacity: 0; pointer-events: none; }
+/* Le contour communal indique le focus ; le bouton HTML reste transparent. */
+.canvas .keyboardButton:focus-visible { outline: none; }
+.mapBadge { position: absolute; top: var(--space-6); left: var(--space-6); display: flex; align-items: center; gap: var(--space-3); max-width: calc(100% - 112px); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); color: var(--color-text); pointer-events: none; }
+.badgeIcon { display: grid; flex-shrink: 0; place-items: center; width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--color-surface-alt); color: var(--color-primary-strong); }
+.mapBadge strong { display: block; font-size: 16px; font-weight: 600; }
+.mapBadge small { display: block; margin-top: var(--space-1); color: var(--color-text-muted); font-size: 16px; }
+.mapBadge > span:last-child { min-width: 0; }
+.controls { position: absolute; top: var(--space-6); right: var(--space-6); display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-1); border: 1px solid var(--color-text-muted); border-radius: var(--radius); background: var(--color-surface); }
+.controls button { color: var(--color-primary-strong); }
+.controls button:focus-visible { outline: 3px solid var(--color-primary-strong); outline-offset: -3px; }
+.compass { position: absolute; top: 200px; right: 40px; display: flex; flex-direction: column; align-items: center; gap: var(--space-1); color: var(--color-primary-strong); font-size: 16px; font-weight: 600; pointer-events: none; }
+.mapHint { position: absolute; top: 128px; left: var(--space-6); display: flex; align-items: center; gap: var(--space-2); color: var(--color-text-muted); font-size: 16px; pointer-events: none; }
+.legendPosition { padding: var(--space-6); border-top: 1px solid var(--color-border); background: var(--color-surface); }
+.legend { color: var(--color-text); }
+.legend h3 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); color: var(--color-primary-strong); font-size: 16px; font-weight: 600; }
+.legend h3 > svg { flex-shrink: 0; }
+.legend h3 > span { margin-left: auto; color: var(--color-text-muted); font-size: 16px; font-weight: 400; }
+.legend ul { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-6); }
+.legend li { display: flex; align-items: center; gap: var(--space-2); font-size: 16px; }
+.swatch { display: inline-block; flex-shrink: 0; width: 20px; height: 20px; border: 1px solid var(--color-text-muted); border-radius: var(--radius-sm); }
+.hatched { background: repeating-linear-gradient(135deg, var(--color-surface-alt) 0 4px, var(--color-text-muted) 4px 5.5px, var(--color-surface-alt) 5.5px 8px); }
+.canvas .tooltip :global(.maplibregl-popup-content) { max-width: 240px; padding: var(--space-3) var(--space-4); border: 1px solid var(--color-text-muted); border-radius: var(--radius); background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-sm); font-family: inherit; white-space: normal; }
+.tooltip strong { display: block; font-size: 16px; font-weight: 600; }
+.tooltip span { display: block; margin-top: var(--space-1); color: var(--color-text-muted); font-size: 16px; }
+.selectionLabel { display: flex; align-items: center; justify-content: center; border: 0; background: transparent; pointer-events: none; }
+.selectedCard { position: relative; width: max-content; max-width: 200px; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-primary-strong); border-radius: var(--radius-sm); background: var(--color-surface); box-shadow: var(--shadow-sm); text-align: center; font-family: var(--font-inter), sans-serif; }
+.selectedCard span { display: block; color: var(--color-text-muted); font-size: 16px; line-height: 1.5; }
+.selectedCard strong { display: block; margin-top: var(--space-1); color: var(--color-primary-strong); font-size: 16px; line-height: 1.5; font-weight: 600; font-variant-numeric: tabular-nums; }
+.state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4); width: 100%; min-height: 420px; padding: var(--space-6); background: var(--color-surface-alt); color: var(--color-text); text-align: center; font-size: 16px; }
+.state h2 { font-size: 20px; font-weight: 600; }
+.state > svg { color: var(--color-text-muted); }
+.state p { max-width: 44ch; overflow-wrap: anywhere; font-size: 16px; }
+.emptyMap { position: absolute; inset: 0; z-index: 1; }
+.errorOverlay { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; background: var(--color-surface-alt); }
+.wrapper .canvas [class~="maplibregl-ctrl-attrib"] { padding: var(--space-1) var(--space-2); background: var(--color-surface); color: var(--color-text-muted); font-family: inherit; font-size: 16px; line-height: 1.5; }
+.wrapper .canvas [class~="maplibregl-ctrl-attrib"] a { display: inline-flex; align-items: center; min-height: 44px; color: var(--color-primary); }
+@media (max-width: 600px) {
+  .stage { min-height: 560px; }
+  .mapBadge { top: var(--space-3); left: var(--space-3); gap: var(--space-2); max-width: calc(100% - 88px); padding: var(--space-2); }
+  .controls { top: var(--space-3); right: var(--space-3); }
+  .compass { top: 184px; right: 28px; }
+  .mapHint { display: none; }
+  .legendPosition { padding: var(--space-4); }
+  .legend h3 { margin-bottom: var(--space-3); }
+  .legend h3 > span { flex-basis: 100%; margin-left: var(--space-6); }
+  .legend ul { gap: var(--space-3) var(--space-4); }
+}
+
+.canvas .tooltip :global(.maplibregl-popup-tip) { display: none; }
