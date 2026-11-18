@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 
 import { UISetup } from "@/components/ui-setup";
+import { AuthProvider } from "@/hooks/use-auth";
 import { getActiveTheme } from "@/theme/themes";
 
 import "./globals.css";
@@ -28,7 +29,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       style={getActiveTheme().cssVariables as CSSProperties}
     >
       <body className="flex min-h-full flex-col bg-background text-base font-normal text-foreground antialiased">
-        <UISetup>{children}</UISetup>
+        <UISetup>
+          <AuthProvider>{children}</AuthProvider>
+        </UISetup>
       </body>
     </html>
   );

@@ -1,3 +1,4 @@
+export { MOCK_PASSWORD, mockUser } from "@/mocks/auth";
 export { mockMunicipalities } from "@/mocks/municipalities";
 export {
   mockIndicatorValues,
